@@ -6,10 +6,14 @@
 resource_local_to_scene = true
 script/source = "extends Area2D
 
+var guano_packed_scene = preload(\"Guano.tscn\")
 export var idle_speed = {\"x\": 40, \"y\": 40}
 export var chasing_food_speed = {\"x\": 0.75, \"y\": 0.75}
 export var lower_speed_threshold = 25
+export var drop_threshold = 0.9994
 var name_check : String = \"bat\";
+export var timesFed : int = 0;
+export var isHungry : bool = false
 
 export var movement_change_threshold : float = 0.99
 var rng = RandomNumberGenerator.new()
@@ -44,11 +48,39 @@ func _process(delta):
 	self.position.x += idle_speed.x * delta
 	self.position.y += idle_speed.y * delta
 	
+	if(!isHungry):
+		var dropChance = rng.randf_range(0,1)
+		if dropChance > drop_threshold:
+			#print(\"Guano dropped\")
+			var guano = guano_packed_scene.instance()
+			var guano_unique = guano.duplicate()
+			guano_unique.position = self.position
+			get_parent().add_child(guano_unique)
+	
 func _on_Bat_area_entered(area):
-	#print(area.name)
 	if(area.name_check == \"food\"):
+		self.timesFed += 1
 		#print(\"The bat ate the strawberry\")
 		area.free()
+		print(self.timesFed)
+		if(self.timesFed == 4):
+			self.scale = Vector2(1.5, 1.5)
+		if(self.timesFed == 10):
+			self.scale = Vector2(2, 2)
+	elif(area.name_check == \"bat\"):
+		print(\"FUNGUS\")
+	elif(area.name_check == \"leftScreen\"):
+		#print(\"Left wall\")
+		self.idle_speed.x *= -1
+	elif(area.name_check == \"topScreen\"):
+		#print(\"Top wall\")
+		self.idle_speed.y *= -1
+	elif(area.name_check == \"rightScreen\"):
+		#print(\"Right wall\")
+		self.idle_speed.x *= -1
+	elif(area.name_check == \"bottomScreen\"):
+		#print(\"Bottom wall\")
+		self.idle_speed.y *= -1
 "
 
 [sub_resource type="AtlasTexture" id=15]
@@ -93,6 +125,7 @@ radius = 13.0
 height = 12.0
 
 [node name="Bat" type="Area2D" groups=["Bat"]]
+z_index = 1
 collision_mask = 13
 script = SubResource( 25 )
 __meta__ = {
