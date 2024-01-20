@@ -1,5 +1,6 @@
-[gd_scene load_steps=11 format=2]
+[gd_scene load_steps=12 format=2]
 
+[ext_resource path="res://Timer.gd" type="Script" id=1]
 [ext_resource path="res://images/bat.png" type="Texture" id=2]
 
 [sub_resource type="GDScript" id=25]
@@ -7,15 +8,17 @@ resource_local_to_scene = true
 script/source = "extends Area2D
 
 var guano_packed_scene = preload(\"Guano.tscn\")
-export var idle_speed = {\"x\": 40, \"y\": 40}
-export var chasing_food_speed = {\"x\": 0.75, \"y\": 0.75}
-export var lower_speed_threshold = 25
-export var drop_threshold = 0.9994
+export var idle_speed: float = 80
+var velocity = Vector2(0, 0)
+export var chasing_food_speed : float = 125
+export var lower_speed_threshold : float = 50
+export var drop_threshold = 0.9993
 var name_check : String = \"bat\";
 export var timesFed : int = 0;
 export var isHungry : bool = false
 var cost: float = 1.00
-
+var orginal_color = self.modulate
+var closest_food
 export var movement_change_threshold : float = 0.99
 var rng = RandomNumberGenerator.new()
 onready var animated_sprite : AnimatedSprite = $AnimatedSprite
@@ -27,42 +30,67 @@ func _ready():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	#print(\"flying\")
-	var change_movement_chance : float = rng.randf()
-	if change_movement_chance > movement_change_threshold:
-		idle_speed.x = rng.randf_range(-40, 40)
-		#print(idle_speed.x)
-		if idle_speed.x > -lower_speed_threshold && idle_speed.x <= 0:
-			idle_speed.x - lower_speed_threshold
-		elif idle_speed.x < lower_speed_threshold && idle_speed.x > 0:
-			idle_speed.x + lower_speed_threshold
+	if !self.isHungry:
+		var change_movement_chance : float = rng.randf()
+		if change_movement_chance > movement_change_threshold:
+			self.velocity.x = rng.randf_range(-self.idle_speed, self.idle_speed)
+			#print(idle_speed.x)
+			if self.velocity.x > -lower_speed_threshold && self.velocity.x <= 0:
+				self.velocity.x - lower_speed_threshold
+			elif self.velocity.x < lower_speed_threshold && self.velocity.x > 0:
+				self.velocity.x + lower_speed_threshold
 			
-		idle_speed.y = rng.randf_range(-40, 40)
-		if idle_speed.y > -lower_speed_threshold && idle_speed.y <= 0:
-			idle_speed.y -lower_speed_threshold
-		elif idle_speed.y < lower_speed_threshold && idle_speed.y > 0:
-			idle_speed.y +lower_speed_threshold
+			self.velocity.y = rng.randf_range(-self.idle_speed, self.idle_speed)
+			if self.velocity.y > -lower_speed_threshold && self.velocity.y <= 0:
+				self.velocity.y -lower_speed_threshold
+			elif self.velocity.y < lower_speed_threshold && self.velocity.y > 0:
+				self.velocity.y +lower_speed_threshold
+	else:
+		#print(\"Firing\")
+		#print(get_parent().get_tree().get_nodes_in_group(\"food\"))
+		var food_on_screen = get_parent().get_tree().get_nodes_in_group(\"food\")
+		closest_food = null
+		var closest_distance = 2000
+		
+		for food in food_on_screen:
+			if food != null:
+				var distance = self.position.distance_to(food.position)
+				if distance < closest_distance:
+					closest_food = food
+		if closest_food != null:
+			#print(closest_food.position)
+			if self.position.x > self.position.move_toward(closest_food.position, self.chasing_food_speed * delta).x:
+				animated_sprite.play(\"fly_left\")
+			else:
+				animated_sprite.play(\"fly_right\")
+			self.position = self.position.move_toward(closest_food.position, self.chasing_food_speed * delta)
 	
-	if idle_speed.x > 0:
-		animated_sprite.play(\"fly_right\")
-	elif idle_speed.x < 0: 
-		animated_sprite.play(\"fly_left\")
-	self.position.x += idle_speed.x * delta
-	self.position.y += idle_speed.y * delta
 	
-	if(!isHungry):
-		var dropChance = rng.randf_range(0,1)
-		if dropChance > drop_threshold:
-			#print(\"Guano dropped\")
-			var guano = guano_packed_scene.instance()
-			var guano_unique = guano.duplicate()
-			guano_unique.position = self.position
-			get_parent().add_child(guano_unique)
+	if !self.isHungry || self.closest_food == null: 
+		self.position.x += self.velocity.x * delta
+		self.position.y += self.velocity.y * delta
+		if self.velocity.x > 0:
+			animated_sprite.play(\"fly_right\")
+		else: 
+			animated_sprite.play(\"fly_left\")
+	
+	
+	var dropChance = rng.randf_range(0,1)
+	if dropChance > drop_threshold:
+		#print(\"Guano dropped\")
+		var guano = guano_packed_scene.instance()
+		var guano_unique = guano.duplicate()
+		guano_unique.position = self.position
+		get_parent().add_child(guano_unique)
 	
 func _on_Bat_area_entered(area):
-	if(area.name_check == \"food\"):
+	if area.name_check == \"food\" && self.isHungry:
 		self.timesFed += 1
 		#print(\"The bat ate the strawberry\")
 		area.free()
+		get_node(\"HungerTimer\").paused = false
+		self.isHungry = false
+		self.modulate = self.orginal_color
 		print(self.timesFed)
 		if(self.timesFed == 4):
 			self.scale = Vector2(1.5, 1.5)
@@ -72,16 +100,24 @@ func _on_Bat_area_entered(area):
 		print(\"FUNGUS\")
 	elif(area.name_check == \"leftScreen\"):
 		#print(\"Left wall\")
-		self.idle_speed.x *= -1
+		self.velocity.x *= -1
 	elif(area.name_check == \"topScreen\"):
 		#print(\"Top wall\")
-		self.idle_speed.y *= -1
+		self.velocity.y *= -1
 	elif(area.name_check == \"rightScreen\"):
 		#print(\"Right wall\")
-		self.idle_speed.x *= -1
+		self.velocity.x *= -1
 	elif(area.name_check == \"bottomScreen\"):
 		#print(\"Bottom wall\")
-		self.idle_speed.y *= -1
+		self.velocity.y *= -1
+
+
+
+func _on_Timer_timeout():
+	print(\"I'm hungry :(\")
+	get_node(\"HungerTimer\").paused = true
+	self.isHungry = true
+	self.modulate = Color(\"#c30010\")
 "
 
 [sub_resource type="AtlasTexture" id=15]
@@ -142,4 +178,8 @@ position = Vector2( 3, 0 )
 rotation = 1.5708
 shape = SubResource( 24 )
 
+[node name="HungerTimer" type="Timer" parent="."]
+script = ExtResource( 1 )
+
 [connection signal="area_entered" from="." to="." method="_on_Bat_area_entered"]
+[connection signal="timeout" from="HungerTimer" to="." method="_on_Timer_timeout"]

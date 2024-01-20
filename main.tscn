@@ -22,8 +22,12 @@ export var summon_buffer : int = 200
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	rng.randomize()
-	pass # Replace with function body.
-
+	
+	for n in 2:
+		var bat = bat_packed_scene.instance()
+		var batDouble = bat.duplicate()
+		batDouble.position = Vector2(rng.randi_range(summon_buffer, get_viewport().get_visible_rect().size.x - summon_buffer), rng.randi_range(summon_buffer, get_viewport().get_visible_rect().size.y - summon_buffer))
+		add_child(batDouble)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
@@ -34,6 +38,8 @@ func _process(delta):
 			food.position = mouse_position
 			self.money -= food.cost
 			get_node(\"MoneyLabel\").update_money()
+			food.add_to_group(\"food\", true)
+			#print(get_tree().get_nodes_in_group(\"food\"))
 			add_child(food)
 		
 	if Input.is_action_just_pressed(\"right_click\"):
@@ -66,6 +72,11 @@ func _on_BatButton_pressed():
 			self.money -= bat.cost
 			get_node(\"MoneyLabel\").update_money()
 			add_child(batDouble)
+
+
+func _on_BottomScreen_area_entered(area):
+	if area.name_check == \"food\" || area.name_check == \"guano\":
+		area.queue_free()
 "
 
 [sub_resource type="RectangleShape2D" id=2]
@@ -182,6 +193,7 @@ align = 1
 valign = 1
 script = ExtResource( 8 )
 
+[connection signal="area_entered" from="CanvasLayer/BottomScreen" to="." method="_on_BottomScreen_area_entered"]
 [connection signal="area_entered" from="Mouse" to="." method="_on_Mouse_area_entered"]
 [connection signal="area_exited" from="Mouse" to="." method="_on_Mouse_area_exited"]
 [connection signal="pressed" from="BatButton" to="." method="_on_BatButton_pressed"]
