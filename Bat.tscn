@@ -1,0 +1,111 @@
+[gd_scene load_steps=11 format=2]
+
+[ext_resource path="res://images/bat.png" type="Texture" id=2]
+
+[sub_resource type="GDScript" id=25]
+resource_local_to_scene = true
+script/source = "extends Area2D
+
+export var idle_speed = {\"x\": 40, \"y\": 40}
+export var chasing_food_speed = {\"x\": 0.75, \"y\": 0.75}
+export var lower_speed_threshold = 25
+var name_check : String = \"bat\";
+
+export var movement_change_threshold : float = 0.99
+var rng = RandomNumberGenerator.new()
+onready var animated_sprite : AnimatedSprite = $AnimatedSprite
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	rng.randomize()
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	#print(\"flying\")
+	var change_movement_chance : float = rng.randf()
+	if change_movement_chance > movement_change_threshold:
+		idle_speed.x = rng.randf_range(-40, 40)
+		#print(idle_speed.x)
+		if idle_speed.x > -lower_speed_threshold && idle_speed.x <= 0:
+			idle_speed.x - lower_speed_threshold
+		elif idle_speed.x < lower_speed_threshold && idle_speed.x > 0:
+			idle_speed.x + lower_speed_threshold
+			
+		idle_speed.y = rng.randf_range(-40, 40)
+		if idle_speed.y > -lower_speed_threshold && idle_speed.y <= 0:
+			idle_speed.y -lower_speed_threshold
+		elif idle_speed.y < lower_speed_threshold && idle_speed.y > 0:
+			idle_speed.y +lower_speed_threshold
+	
+	if idle_speed.x > 0:
+		animated_sprite.play(\"fly_right\")
+	elif idle_speed.x < 0: 
+		animated_sprite.play(\"fly_left\")
+	self.position.x += idle_speed.x * delta
+	self.position.y += idle_speed.y * delta
+	
+func _on_Bat_area_entered(area):
+	#print(area.name)
+	if(area.name_check == \"food\"):
+		#print(\"The bat ate the strawberry\")
+		area.free()
+"
+
+[sub_resource type="AtlasTexture" id=15]
+atlas = ExtResource( 2 )
+region = Rect2( 128, 128, 128, 128 )
+
+[sub_resource type="AtlasTexture" id=16]
+atlas = ExtResource( 2 )
+region = Rect2( 256, 128, 128, 128 )
+
+[sub_resource type="AtlasTexture" id=17]
+atlas = ExtResource( 2 )
+region = Rect2( 384, 128, 128, 128 )
+
+[sub_resource type="AtlasTexture" id=21]
+atlas = ExtResource( 2 )
+region = Rect2( 128, 384, 128, 128 )
+
+[sub_resource type="AtlasTexture" id=22]
+atlas = ExtResource( 2 )
+region = Rect2( 256, 384, 128, 128 )
+
+[sub_resource type="AtlasTexture" id=23]
+atlas = ExtResource( 2 )
+region = Rect2( 384, 384, 128, 128 )
+
+[sub_resource type="SpriteFrames" id=14]
+animations = [ {
+"frames": [ SubResource( 15 ), SubResource( 16 ), SubResource( 17 ) ],
+"loop": true,
+"name": "fly_left",
+"speed": 10.0
+}, {
+"frames": [ SubResource( 21 ), SubResource( 22 ), SubResource( 23 ) ],
+"loop": true,
+"name": "fly_right",
+"speed": 10.0
+} ]
+
+[sub_resource type="CapsuleShape2D" id=24]
+radius = 13.0
+height = 12.0
+
+[node name="Bat" type="Area2D" groups=["Bat"]]
+collision_mask = 13
+script = SubResource( 25 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="AnimatedSprite" type="AnimatedSprite" parent="."]
+frames = SubResource( 14 )
+animation = "fly_right"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2( 3, 0 )
+rotation = 1.5708
+shape = SubResource( 24 )
+
+[connection signal="area_entered" from="." to="." method="_on_Bat_area_entered"]

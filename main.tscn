@@ -1,0 +1,45 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://images/awesomeCavePixelArt.png" type="Texture" id=1]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node
+var food_packed_scene = preload(\"Food.tscn\")
+var bat_packed_scene = preload(\"Bat.tscn\")
+var rng = RandomNumberGenerator.new()
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	rng.randomize()
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	if Input.is_action_just_pressed(\"click\"):
+		var mouse_position = get_viewport().get_mouse_position()
+		var food = food_packed_scene.instance()
+		food.position = mouse_position
+		add_child(food)
+		
+	if Input.is_action_just_pressed(\"right_click\"):
+		var mouse_position = get_viewport().get_mouse_position()
+		var bat = bat_packed_scene.instance()
+		#This is the most important part 
+		#Otherwise the bats all share the same script
+		var batDouble = bat.duplicate()
+		batDouble.position = mouse_position
+		add_child(batDouble)
+"
+
+[node name="Main" type="Node"]
+script = SubResource( 1 )
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="Sprite" type="Sprite" parent="CanvasLayer"]
+position = Vector2( 562, 326 )
+scale = Vector2( 0.878125, 0.908333 )
+z_index = -1
+texture = ExtResource( 1 )
