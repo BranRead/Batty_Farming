@@ -1,0 +1,15 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+path="res://.import/atmospheric-soundscape-152493.mp3-c9a3bb3195873c0afc93c0c11d5fb743.mp3str"
+
+[deps]
+
+source_file="res://audio/atmospheric-soundscape-152493.mp3"
+dest_files=[ "res://.import/atmospheric-soundscape-152493.mp3-c9a3bb3195873c0afc93c0c11d5fb743.mp3str" ]
+
+[params]
+
+loop=true
+loop_offset=0

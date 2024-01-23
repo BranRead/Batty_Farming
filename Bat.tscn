@@ -17,13 +17,16 @@ export var drop_threshold = 0.9993
 var name_check : String = \"bat\";
 export var timesFed : int = 0;
 export var isHungry : bool = false
+var bat_growth_level = 1
 var cost: float = 1.00
 var orginal_color = self.modulate
 var closest_food
+var animation_locked = false
 export var movement_change_threshold : float = 0.99
 var rng = RandomNumberGenerator.new()
 onready var animated_sprite : AnimatedSprite = $AnimatedSprite
-onready var audio : AudioStreamPlayer = $EatSound
+onready var eat_sound : AudioStreamPlayer = $EatSound
+onready var gold_guano = load(\"res://images/goldenGuano.png\")
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -31,6 +34,8 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	if !animation_locked:
+		animated_sprite.play(\"fly\")
 	#print(\"flying\")
 	if !self.isHungry:
 		var change_movement_chance : float = rng.randf()
@@ -62,9 +67,9 @@ func _process(delta):
 		if closest_food != null:
 			#print(closest_food.position)
 			if self.position.x > self.position.move_toward(closest_food.position, self.chasing_food_speed * delta).x:
-				animated_sprite.play(\"fly_left\")
+				animated_sprite.flip_h = false
 			else:
-				animated_sprite.play(\"fly_right\")
+				animated_sprite.flip_h = true
 			self.position = self.position.move_toward(closest_food.position, self.chasing_food_speed * delta)
 	
 	
@@ -72,22 +77,26 @@ func _process(delta):
 		self.position.x += self.velocity.x * delta
 		self.position.y += self.velocity.y * delta
 		if self.velocity.x > 0:
-			animated_sprite.play(\"fly_right\")
+			animated_sprite.flip_h = true
 		else: 
-			animated_sprite.play(\"fly_left\")
-	
+			animated_sprite.flip_h = false
 	
 	var dropChance = rng.randf_range(0,1)
 	if dropChance > drop_threshold:
+		print(\"Bat level: \" + str(bat_growth_level))
 		#print(\"Guano dropped\")
 		var guano = guano_packed_scene.instance()
 		var guano_unique = guano.duplicate()
 		guano_unique.position = self.position
+		if bat_growth_level == 3:
+			guano_unique.get_child(0).play(\"golden\")
 		get_parent().add_child(guano_unique)
 	
 func _on_Bat_area_entered(area):
 	if area.name_check == \"food\" && self.isHungry:
-		audio.play()
+		eat_sound.play()
+		animated_sprite.play(\"eat\")
+		animation_locked = true
 		self.timesFed += 1
 		#print(\"The bat ate the strawberry\")
 		area.free()
@@ -97,8 +106,10 @@ func _on_Bat_area_entered(area):
 		print(self.timesFed)
 		if(self.timesFed == 4):
 			self.scale = Vector2(1.5, 1.5)
+			self.bat_growth_level += 1
 		if(self.timesFed == 10):
 			self.scale = Vector2(2, 2)
+			self.bat_growth_level += 1
 	elif(area.name_check == \"bat\"):
 		print(\"FUNGUS\")
 	elif(area.name_check == \"leftScreen\"):
@@ -114,14 +125,30 @@ func _on_Bat_area_entered(area):
 		#print(\"Bottom wall\")
 		self.velocity.y *= -1
 
-
-
 func _on_Timer_timeout():
 	print(\"I'm hungry :(\")
 	get_node(\"HungerTimer\").paused = true
 	self.isHungry = true
 	self.modulate = Color(\"#c30010\")
+
+
+
+func _on_AnimatedSprite_animation_finished():
+	if [\"eat\"].has(animated_sprite.animation):
+		animation_locked = false
 "
+
+[sub_resource type="AtlasTexture" id=26]
+atlas = ExtResource( 2 )
+region = Rect2( 512, 128, 128, 128 )
+
+[sub_resource type="AtlasTexture" id=27]
+atlas = ExtResource( 2 )
+region = Rect2( 640, 128, 128, 128 )
+
+[sub_resource type="AtlasTexture" id=28]
+atlas = ExtResource( 2 )
+region = Rect2( 768, 128, 128, 128 )
 
 [sub_resource type="AtlasTexture" id=15]
 atlas = ExtResource( 2 )
@@ -135,28 +162,16 @@ region = Rect2( 256, 128, 128, 128 )
 atlas = ExtResource( 2 )
 region = Rect2( 384, 128, 128, 128 )
 
-[sub_resource type="AtlasTexture" id=21]
-atlas = ExtResource( 2 )
-region = Rect2( 128, 384, 128, 128 )
-
-[sub_resource type="AtlasTexture" id=22]
-atlas = ExtResource( 2 )
-region = Rect2( 256, 384, 128, 128 )
-
-[sub_resource type="AtlasTexture" id=23]
-atlas = ExtResource( 2 )
-region = Rect2( 384, 384, 128, 128 )
-
 [sub_resource type="SpriteFrames" id=14]
 animations = [ {
-"frames": [ SubResource( 15 ), SubResource( 16 ), SubResource( 17 ) ],
+"frames": [ SubResource( 26 ), SubResource( 27 ), SubResource( 28 ) ],
 "loop": true,
-"name": "fly_left",
+"name": "eat",
 "speed": 10.0
 }, {
-"frames": [ SubResource( 21 ), SubResource( 22 ), SubResource( 23 ) ],
+"frames": [ SubResource( 15 ), SubResource( 16 ), SubResource( 17 ) ],
 "loop": true,
-"name": "fly_right",
+"name": "fly",
 "speed": 10.0
 } ]
 
@@ -171,11 +186,10 @@ script = SubResource( 25 )
 __meta__ = {
 "_edit_group_": true
 }
-drop_threshold = 0.954
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
 frames = SubResource( 14 )
-animation = "fly_right"
+animation = "eat"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2( 3, 0 )
@@ -189,4 +203,5 @@ script = ExtResource( 1 )
 stream = ExtResource( 3 )
 
 [connection signal="area_entered" from="." to="." method="_on_Bat_area_entered"]
+[connection signal="animation_finished" from="AnimatedSprite" to="." method="_on_AnimatedSprite_animation_finished"]
 [connection signal="timeout" from="HungerTimer" to="." method="_on_Timer_timeout"]

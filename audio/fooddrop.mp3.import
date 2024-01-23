@@ -1,0 +1,15 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+path="res://.import/fooddrop.mp3-c375d621f6318e20a7beb4b18875cf08.mp3str"
+
+[deps]
+
+source_file="res://audio/fooddrop.mp3"
+dest_files=[ "res://.import/fooddrop.mp3-c375d621f6318e20a7beb4b18875cf08.mp3str" ]
+
+[params]
+
+loop=false
+loop_offset=0

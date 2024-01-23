@@ -3,7 +3,8 @@ extends Area2D
 export var falling_speed : float = 80
 var name_check : String = "guano"
 var is_selected : bool = false
-var worth : float = 0.25
+var normal_worth : float = 0.25
+var gold_worth : float = 0.75
 onready var collect_sound : AudioStreamPlayer = $CollectSound
 var is_fallen_off_screen = false
 
@@ -27,7 +28,9 @@ func _on_Guano_mouse_exited():
 
 func collect_guano():
 	get_parent().guano_collected += 1
-	get_parent().money += self.worth
+	if $AnimatedSprite.animation == "base":
+		get_parent().money += self.normal_worth
+	else:
+		get_parent().money += self.gold_worth
 	get_parent().get_node("MoneyLabel").update_money()
-	#print("Guano collected: " + str(get_parent().guano_collected))
 	self.queue_free()

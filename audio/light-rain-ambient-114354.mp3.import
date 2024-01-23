@@ -1,0 +1,15 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+path="res://.import/light-rain-ambient-114354.mp3-1d95b88afd77f4a6e95a29554ebb00a7.mp3str"
+
+[deps]
+
+source_file="res://audio/light-rain-ambient-114354.mp3"
+dest_files=[ "res://.import/light-rain-ambient-114354.mp3-1d95b88afd77f4a6e95a29554ebb00a7.mp3str" ]
+
+[params]
+
+loop=true
+loop_offset=0

@@ -1,0 +1,15 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+path="res://.import/buybat.mp3-f835be649b749d388d0942901e874381.mp3str"
+
+[deps]
+
+source_file="res://audio/buybat.mp3"
+dest_files=[ "res://.import/buybat.mp3-f835be649b749d388d0942901e874381.mp3str" ]
+
+[params]
+
+loop=false
+loop_offset=0
