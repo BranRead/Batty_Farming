@@ -111,6 +111,9 @@ func _on_BottomScreen_area_entered(area):
 		area.is_fallen_off_screen = true
 	if area.name_check == \"food\" || area.name_check == \"guano\":
 		area.queue_free()
+	if area.name_check == \"bat\":
+		if !area.isAlive:
+			area.queue_free()
 	
 func no_more_money():
 	$TextureRect/NoMoney.play(\"NoMoney\")
