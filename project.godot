@@ -8,6 +8,28 @@
 
 config_version=4
 
+_global_script_classes=[ {
+"base": "Area2D",
+"class": "Banana",
+"language": "GDScript",
+"path": "res://Banana.gd"
+}, {
+"base": "Area2D",
+"class": "Grapes",
+"language": "GDScript",
+"path": "res://Grapes.gd"
+}, {
+"base": "Area2D",
+"class": "Strawberry",
+"language": "GDScript",
+"path": "res://Strawberry.gd"
+} ]
+_global_script_class_icons={
+"Banana": "",
+"Grapes": "",
+"Strawberry": ""
+}
+
 [application]
 
 config/name="Insaniquarium"

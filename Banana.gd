@@ -1,7 +1,9 @@
-extends Area2D
+extends "res://Food.gd"
 
-var name_check = "mouse"
-var area_overlap
+class_name Banana
+
+var satiety_factor : float = 2;
+var growth_factor : float = 2;
 
 # Declare member variables here. Examples:
 # var a = 2
@@ -14,5 +16,5 @@ func _ready():
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta):
-	self.position = get_global_mouse_position()
+#func _process(delta):
+#	pass

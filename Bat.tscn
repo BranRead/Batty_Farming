@@ -19,7 +19,7 @@ var velocity = Vector2(0, 0)
 export var lower_speed_threshold : float = 50
 export var drop_threshold = 0.9993
 var name_check : String = \"bat\";
-export var timesFed : int = 0;
+export var timesFed : float = 0;
 export var isHungry : bool = false
 var bat_growth_level = 1
 var cost: float = 1.00
@@ -98,23 +98,27 @@ func _process(delta):
 		get_parent().add_child(guano_unique)
 	
 func _on_Bat_area_entered(area):
+	#if area.name_check == \"enemy\":
+	#	self.free()
 	if area.name_check == \"food\" && self.isHungry && self.isAlive:
 		eat_sound.play()
 		animated_sprite.play(\"eat\")
 		animation_locked = true
-		self.timesFed += 1
+		self.timesFed += area.growth_factor
 		#print(\"The bat ate the strawberry\")
+		
+		$HungerTimer.wait_time = $HungerTimer.time_base * area.satiety_factor
 		area.free()
-		get_node(\"HungerTimer\").paused = false
+		$HungerTimer.paused = false
 		if !$DeathTimer.is_stopped():
 			$DeathTimer.stop()
 		self.isHungry = false
 		self.modulate = self.orginal_color
 		print(self.timesFed)
-		if(self.timesFed == 4):
+		if(self.timesFed >= 4 && self.bat_growth_level == 1):
 			self.scale = Vector2(1.5, 1.5)
 			self.bat_growth_level += 1
-		if(self.timesFed == 10):
+		if(self.timesFed >= 10 && self.bat_growth_level == 2):
 			self.scale = Vector2(2, 2)
 			self.bat_growth_level += 1
 	elif area.name_check == \"bat\":

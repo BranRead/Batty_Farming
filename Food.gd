@@ -1,9 +1,9 @@
 extends Area2D
 
-export var falling_speed : float = 80
+export var falling_speed : float = 80;
 var name_check : String = "food";
-var cost : float = 0.05
-var isCollected = false
+var cost : float = 0.05;
+var isCollected = false;
 
 
 # Called when the node enters the scene tree for the first time.
