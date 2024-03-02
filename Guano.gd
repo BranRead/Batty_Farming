@@ -28,9 +28,10 @@ func _on_Guano_mouse_exited():
 
 func collect_guano():
 	get_parent().guano_collected += 1
+	collect_sound.play()
 	if $AnimatedSprite.animation == "base":
 		get_parent().money += self.normal_worth
 	else:
 		get_parent().money += self.gold_worth
 	get_parent().get_node("MoneyLabel").update_money()
-	self.queue_free()
+	self.queue_free() 

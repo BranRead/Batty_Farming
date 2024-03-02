@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=2]
+[gd_scene load_steps=26 format=2]
 
 [ext_resource path="res://images/02_PixelSky_1920x1080.png" type="Texture" id=1]
 [ext_resource path="res://LeftScreen.gd" type="Script" id=2]
@@ -18,6 +18,8 @@
 [ext_resource path="res://images/moneyPanel.png" type="Texture" id=16]
 [ext_resource path="res://images/foodIcon.png" type="Texture" id=17]
 [ext_resource path="res://SpawnTimer.gd" type="Script" id=18]
+[ext_resource path="res://GameOverScreen.tscn" type="PackedScene" id=19]
+[ext_resource path="res://WinScreen.tscn" type="PackedScene" id=20]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends Node
@@ -30,12 +32,17 @@ var rng = RandomNumberGenerator.new()
 var guano_collected : int = 0
 var is_mouse_touching_something : bool = false 
 var money : float = 2.00
+var bat_cost : float = 1.00
 var food_allowed_onscreen: int = 1
 var food_quantity_upgrade_cost : float = 1.50
 var food_quality_upgrade_cost : float = 2.50
 var food_quality_level = 1
+var weapon_strength : int = 1
+var weapon_upgrade_cost : float = 4.00
 export var summon_buffer : int = 200
 var time_elapsed : float = 0
+var wincon_cost : float = 25.00
+var wincon : int = 0
 
 onready var collect_guano : AudioStreamPlayer = $CollectGuano
 onready var food_drop : AudioStreamPlayer = $FoodDrop
@@ -100,7 +107,8 @@ func _process(delta):
 	elif Input.is_action_just_pressed(\"click\"):
 		if($Mouse.area_overlap != null && $Mouse.area_overlap.name_check == \"enemy\"):
 			var enemy = $Mouse.area_overlap
-			enemy.health -= 1
+			enemy.health -= self.weapon_strength
+			print(enemy.health)
 			if enemy.health <= 0:
 				enemy.free()
 			#print($Mouse.area_overlap.health)
@@ -108,19 +116,18 @@ func _process(delta):
 	if Input.is_action_just_pressed(\"right_click\"):
 		self.money += 10
 		var mouse_position = get_viewport().get_mouse_position()
-		var bat = bat_packed_scene.instance()
-		#This is the most important part 
+		#Duplicate is the most important part 
 		#Otherwise the bats all share the same script
-		var batDouble = bat.duplicate()
-		batDouble.position = mouse_position
-		add_child(batDouble)
+		var bat = bat_packed_scene.instance().duplicate()
+		bat.position = mouse_position
+		bat.add_to_group(\"bats\")
+		add_child(bat)
 
 func _on_Mouse_area_entered(area):
 	#print(\"Can't drop food\")
 	is_mouse_touching_something = true
 	$Mouse.area_overlap = area
 	#print($Mouse.area_overlap.name_check)
-	
 
 func _on_Mouse_area_exited(area):
 	#print(\"Can drop food\")
@@ -129,15 +136,15 @@ func _on_Mouse_area_exited(area):
 
 func _on_BatButton_pressed():
 	click.play();
-	var bat = bat_packed_scene.instance()
-	if check_money(bat.cost):
-			#This is the most important part 
-			#Otherwise the bats all share the same script
-			var batDouble = bat.duplicate()
-			batDouble.position = Vector2(rng.randi_range(summon_buffer, get_viewport().get_visible_rect().size.x - summon_buffer), rng.randi_range(summon_buffer, get_viewport().get_visible_rect().size.y - summon_buffer))
-			self.money -= bat.cost
-			$MoneyLabel.update_money()
-			add_child(batDouble)
+	if check_money(bat_cost):
+		#Duplicate is the most important part 
+		#Otherwise the bats all share the same script
+		var bat = bat_packed_scene.instance().duplicate()
+		bat.position = Vector2(rng.randi_range(summon_buffer, get_viewport().get_visible_rect().size.x - summon_buffer), rng.randi_range(summon_buffer, get_viewport().get_visible_rect().size.y - summon_buffer))
+		self.money -= bat_cost
+		$MoneyLabel.update_money()
+		bat.add_to_group(\"bats\")
+		add_child(bat)
 	else:
 		no_more_money();
 
@@ -157,9 +164,11 @@ func check_money(itemCost):
 	return self.money > itemCost || is_equal_approx(self.money, itemCost)
 	
 func _on_Main_child_exiting_tree(node):
-	if node.name_check == \"guano\":
-		if !node.is_fallen_off_screen:
-			collect_guano.play()
+	if node.get_class() == \"Area2D\":
+		if node.name_check == \"guano\":
+			if !node.is_fallen_off_screen:
+				print(node.get_class())
+				collect_guano.play()
 
 func _on_Main_child_entered_tree(node):
 	if node is Area2D:
@@ -179,12 +188,15 @@ func _on_FoodDropQuantityButton_pressed():
 			if food_allowed_onscreen == 10:
 				$FoodDropQuantityButton/Label.text = \"MAX\"
 				$FoodDropQuantityButton.mouse_default_cursor_shape = Control.CURSOR_ARROW
+		else: 
+			no_more_money()
 
 func _on_FoodUpgradeButton_pressed():
 	if food_quality_level < 3:
 		click.play();
 		if check_money(food_quality_upgrade_cost):
 			food_quality_level += 1
+			self.money -= food_quality_upgrade_cost
 			$MoneyLabel.update_money()
 			if food_quality_level < 3: 
 				$FoodUpgradeButton.icon = load(\"res://images/grapes.png\")
@@ -192,6 +204,36 @@ func _on_FoodUpgradeButton_pressed():
 				$FoodUpgradeButton.icon = load(\"res://images/bananas.png\")
 				$FoodUpgradeButton/Label.text = \"MAX\"
 				$FoodUpgradeButton.mouse_default_cursor_shape = Control.CURSOR_ARROW
+		else: 
+			no_more_money()
+
+func _on_WaterGunUpgradeButton_pressed():
+	if weapon_strength < 3:
+		click.play()
+		if check_money(weapon_upgrade_cost):
+			weapon_strength += 1
+			self.money -= weapon_upgrade_cost
+			$MoneyLabel.update_money()
+			if weapon_strength < 3:
+				$WaterGunUpgradeButton.text = \"X\" + str(weapon_strength)
+			else: 
+				$WaterGunUpgradeButton.text = \"MAX\"
+		else: 
+			no_more_money()
+			
+func _on_FarmButton_pressed():
+	if (check_money(wincon_cost)):
+		wincon += 1
+		self.money -= wincon_cost
+		$MoneyLabel.update_money()
+		if (wincon >= 3):
+			get_tree().paused = true
+			$WinScreen/TimeElapsed.text = \"Time Elapsed: \" + str(time_elapsed)
+			$WinScreen/MoneyLeft.text = \"Remaining Money: \" + str(money)
+			$WinScreen.visible = true
+	else: 
+		no_more_money()
+
 
 
 func _on_SpawnTimer_timeout():
@@ -201,6 +243,9 @@ func _on_SpawnTimer_timeout():
 		crow.position = Vector2(rng.randi_range(summon_buffer, get_viewport().get_visible_rect().size.x - summon_buffer), rng.randi_range(summon_buffer, get_viewport().get_visible_rect().size.y - summon_buffer))
 		add_child(crow)
 		
+
+
+
 
 "
 
@@ -231,6 +276,19 @@ tracks/0/keys = {
 script = SubResource( 1 )
 summon_buffer = 301
 
+[node name="GameOverScreen" parent="." instance=ExtResource( 19 )]
+pause_mode = 2
+visible = false
+color = Color( 0.133333, 0.133333, 0.411765, 1 )
+
+[node name="WinScreen" parent="." instance=ExtResource( 20 )]
+pause_mode = 2
+visible = false
+margin_left = 785.0
+margin_top = 390.0
+margin_right = 1135.0
+margin_bottom = 690.0
+
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 layer = -1
 
@@ -245,10 +303,11 @@ mouse_filter = 2
 color = Color( 0.211765, 0.219608, 0.219608, 1 )
 
 [node name="Sprite" type="Sprite" parent="CanvasLayer"]
-position = Vector2( 960, 530 )
+position = Vector2( 983, 832 )
 scale = Vector2( 0.9, 0.9 )
 z_index = -1
 texture = ExtResource( 1 )
+offset = Vector2( -25.5555, -335.556 )
 
 [node name="SideBar2" type="TextureRect" parent="CanvasLayer"]
 margin_left = 1068.0
@@ -374,6 +433,7 @@ icon_align = 1
 margin_top = 64.0
 margin_right = 200.0
 margin_bottom = 100.0
+rect_pivot_offset = Vector2( 27, 61 )
 text = "Food Quality: $2.50"
 align = 1
 valign = 1
@@ -384,6 +444,16 @@ margin_top = 25.0
 margin_right = 1183.0
 margin_bottom = 125.0
 rect_pivot_offset = Vector2( 108, 163 )
+text = "x1"
+
+[node name="Label2" type="Label" parent="WaterGunUpgradeButton"]
+margin_top = 64.0
+margin_right = 200.0
+margin_bottom = 100.0
+rect_pivot_offset = Vector2( -1048, 372 )
+text = "Weapon Upgrade: $4.00"
+align = 1
+valign = 1
 
 [node name="FarmButton" type="Button" parent="."]
 margin_left = 1193.0
@@ -391,6 +461,15 @@ margin_top = 25.0
 margin_right = 1393.0
 margin_bottom = 125.0
 rect_pivot_offset = Vector2( 108, 163 )
+
+[node name="Label2" type="Label" parent="FarmButton"]
+margin_top = 64.0
+margin_right = 200.0
+margin_bottom = 100.0
+rect_pivot_offset = Vector2( -1048, 372 )
+text = "Wincon: $25.00"
+align = 1
+valign = 1
 
 [node name="CollectGuano" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 9 )
@@ -450,4 +529,8 @@ margin_bottom = 117.0
 [connection signal="pressed" from="BatButton" to="." method="_on_BatButton_pressed"]
 [connection signal="pressed" from="FoodDropQuantityButton" to="." method="_on_FoodDropQuantityButton_pressed"]
 [connection signal="pressed" from="FoodUpgradeButton" to="." method="_on_FoodUpgradeButton_pressed"]
+[connection signal="pressed" from="WaterGunUpgradeButton" to="." method="_on_WaterGunUpgradeButton_pressed"]
+[connection signal="child_exiting_tree" from="FarmButton" to="." method="_on_FarmButton_child_exiting_tree"]
+[connection signal="pressed" from="FarmButton" to="." method="_on_FarmButton_pressed"]
+[connection signal="child_exiting_tree" from="CollectGuano" to="." method="_on_CollectGuano_child_exiting_tree"]
 [connection signal="timeout" from="SpawnTimer" to="." method="_on_SpawnTimer_timeout"]

@@ -32,12 +32,13 @@ func _process(delta):
 				closest_distance = distance
 		if closest_bat != null:
 			if self.position.x > self.position.move_toward(closest_bat.position, self.speed * delta).x:
-				$AnimatedSprite.flip_h = true
-			else:
 				$AnimatedSprite.flip_h = false
+			else:
+				$AnimatedSprite.flip_h = true
 			self.position = self.position.move_toward(closest_bat.position, self.speed * delta)
 
 
 func _on_Enemy_area_entered(area):
 	if(area.name_check == "bat"):
+		area.remove_from_group("bats")
 		area.free()

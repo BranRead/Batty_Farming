@@ -1,7 +1,7 @@
-[gd_scene load_steps=15 format=2]
+[gd_scene load_steps=14 format=2]
 
 [ext_resource path="res://Timer.gd" type="Script" id=1]
-[ext_resource path="res://images/bat.png" type="Texture" id=2]
+[ext_resource path="res://images/16x16 Bat.png" type="Texture" id=2]
 [ext_resource path="res://audio/Sword_Slash.wav" type="AudioStream" id=3]
 [ext_resource path="res://DeathTimer.gd" type="Script" id=4]
 
@@ -15,6 +15,7 @@ export var idle_speed: float = 80
 export var chasing_food_speed : float = 125
 export var falling_speed = 50
 var velocity = Vector2(0, 0)
+var game_over = preload(\"GameOverScreen.tscn\")
 
 export var lower_speed_threshold : float = 50
 export var drop_threshold = 0.9993
@@ -22,7 +23,6 @@ var name_check : String = \"bat\";
 export var timesFed : float = 0;
 export var isHungry : bool = false
 var bat_growth_level = 1
-var cost: float = 1.00
 var orginal_color = self.modulate
 var closest_food
 var animation_locked = false
@@ -90,12 +90,11 @@ func _process(delta):
 	if dropChance > drop_threshold && self.isAlive:
 		print(\"Bat level: \" + str(bat_growth_level))
 		#print(\"Guano dropped\")
-		var guano = guano_packed_scene.instance()
-		var guano_unique = guano.duplicate()
-		guano_unique.position = self.position
+		var guano = guano_packed_scene.instance().duplicate()
+		guano.position = self.position
 		if bat_growth_level == 3:
-			guano_unique.get_child(0).play(\"golden\")
-		get_parent().add_child(guano_unique)
+			guano.get_child(0).play(\"golden\")
+		get_parent().add_child(guano)
 	
 func _on_Bat_area_entered(area):
 	#if area.name_check == \"enemy\":
@@ -155,6 +154,9 @@ func bat_death():
 	animated_sprite.play(\"death\")
 	self.isAlive = false
 	animation_locked = true
+	self.remove_from_group(\"bats\")
+	if (get_parent().get_tree().get_nodes_in_group(\"bats\").empty()):
+				game_over()
 	self.velocity.x = 0
 	self.velocity.y = self.falling_speed
 
@@ -162,51 +164,50 @@ func _on_AnimatedSprite_animation_finished():
 	if [\"eat\"].has(animated_sprite.animation):
 		animation_locked = false
 
+func game_over():
+	get_tree().paused = true
+	get_node(\"../GameOverScreen\").visible = true 
 
 
 "
 
-[sub_resource type="AtlasTexture" id=29]
-atlas = ExtResource( 2 )
-region = Rect2( 0, 128, 128, 128 )
-
 [sub_resource type="AtlasTexture" id=26]
 atlas = ExtResource( 2 )
-region = Rect2( 512, 128, 128, 128 )
+region = Rect2( 0, 256, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=27]
 atlas = ExtResource( 2 )
-region = Rect2( 640, 128, 128, 128 )
+region = Rect2( 64, 256, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=28]
 atlas = ExtResource( 2 )
-region = Rect2( 768, 128, 128, 128 )
+region = Rect2( 0, 0, 64, 64 )
 
-[sub_resource type="AtlasTexture" id=15]
+[sub_resource type="AtlasTexture" id=29]
 atlas = ExtResource( 2 )
-region = Rect2( 128, 128, 128, 128 )
+region = Rect2( 64, 0, 64, 64 )
 
-[sub_resource type="AtlasTexture" id=16]
+[sub_resource type="AtlasTexture" id=30]
 atlas = ExtResource( 2 )
-region = Rect2( 256, 128, 128, 128 )
+region = Rect2( 128, 0, 64, 64 )
 
-[sub_resource type="AtlasTexture" id=17]
+[sub_resource type="AtlasTexture" id=31]
 atlas = ExtResource( 2 )
-region = Rect2( 384, 128, 128, 128 )
+region = Rect2( 192, 0, 64, 64 )
 
 [sub_resource type="SpriteFrames" id=14]
 animations = [ {
-"frames": [ SubResource( 29 ) ],
+"frames": [ SubResource( 26 ), SubResource( 27 ) ],
 "loop": true,
 "name": "death",
 "speed": 10.0
 }, {
-"frames": [ SubResource( 26 ), SubResource( 27 ), SubResource( 28 ) ],
+"frames": [  ],
 "loop": true,
 "name": "eat",
 "speed": 10.0
 }, {
-"frames": [ SubResource( 15 ), SubResource( 16 ), SubResource( 17 ) ],
+"frames": [ SubResource( 28 ), SubResource( 29 ), SubResource( 30 ), SubResource( 31 ) ],
 "loop": true,
 "name": "fly",
 "speed": 10.0
@@ -225,6 +226,7 @@ __meta__ = {
 }
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
+scale = Vector2( 1.5, 1.5 )
 frames = SubResource( 14 )
 animation = "death"
 
