@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=2]
+[gd_scene load_steps=38 format=2]
 
 [ext_resource path="res://images/02_PixelSky_1920x1080.png" type="Texture" id=1]
 [ext_resource path="res://LeftScreen.gd" type="Script" id=2]
@@ -20,6 +20,9 @@
 [ext_resource path="res://SpawnTimer.gd" type="Script" id=18]
 [ext_resource path="res://GameOverScreen.tscn" type="PackedScene" id=19]
 [ext_resource path="res://WinScreen.tscn" type="PackedScene" id=20]
+[ext_resource path="res://KodeMono-Regular.ttf" type="DynamicFontData" id=21]
+[ext_resource path="res://Sprite.gd" type="Script" id=22]
+[ext_resource path="res://EnemyApproachesTimer.gd" type="Script" id=23]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends Node
@@ -66,7 +69,10 @@ func _ready():
 func _process(delta):
 	time_elapsed += delta
 	$ElapsedTime.text = str(time_elapsed)
-	if Input.is_action_just_pressed(\"click\") && !is_mouse_touching_something:
+	if (Input.is_action_just_pressed(\"click\") && 
+	 !is_mouse_touching_something && 
+	 get_tree().get_nodes_in_group(\"enemies\").size() == 0):
+		print($Mouse.area_overlap)
 		var mouse_position = get_viewport().get_mouse_position()
 		var food_on_screen = get_tree().get_nodes_in_group(\"food\")
 		
@@ -77,7 +83,7 @@ func _process(delta):
 					if food_on_screen.size() < food_allowed_onscreen:
 						strawberry.position = mouse_position
 						self.money -= strawberry.cost
-						$MoneyLabel.update_money()
+						$MoneyBackground/MoneyLabel.update_money()
 						strawberry.add_to_group(\"food\", true)
 						add_child(strawberry)
 				else:
@@ -88,7 +94,7 @@ func _process(delta):
 					if food_on_screen.size() < food_allowed_onscreen:
 						grapes.position = mouse_position
 						self.money -= grapes.cost
-						$MoneyLabel.update_money()
+						$MoneyBackground/MoneyLabel.update_money()
 						grapes.add_to_group(\"food\", true)
 						add_child(grapes)
 				else:
@@ -99,19 +105,11 @@ func _process(delta):
 					if food_on_screen.size() < food_allowed_onscreen:
 						banana.position = mouse_position
 						self.money -= banana.cost
-						$MoneyLabel.update_money()
+						$MoneyBackground/MoneyLabel.update_money()
 						banana.add_to_group(\"food\", true)
 						add_child(banana)
 				else:
 					no_more_money();
-	elif Input.is_action_just_pressed(\"click\"):
-		if($Mouse.area_overlap != null && $Mouse.area_overlap.name_check == \"enemy\"):
-			var enemy = $Mouse.area_overlap
-			enemy.health -= self.weapon_strength
-			print(enemy.health)
-			if enemy.health <= 0:
-				enemy.free()
-			#print($Mouse.area_overlap.health)
 
 	if Input.is_action_just_pressed(\"right_click\"):
 		self.money += 10
@@ -119,8 +117,8 @@ func _process(delta):
 		#Duplicate is the most important part 
 		#Otherwise the bats all share the same script
 		var bat = bat_packed_scene.instance().duplicate()
-		bat.position = mouse_position
 		bat.add_to_group(\"bats\")
+		bat.position = mouse_position
 		add_child(bat)
 
 func _on_Mouse_area_entered(area):
@@ -142,7 +140,7 @@ func _on_BatButton_pressed():
 		var bat = bat_packed_scene.instance().duplicate()
 		bat.position = Vector2(rng.randi_range(summon_buffer, get_viewport().get_visible_rect().size.x - summon_buffer), rng.randi_range(summon_buffer, get_viewport().get_visible_rect().size.y - summon_buffer))
 		self.money -= bat_cost
-		$MoneyLabel.update_money()
+		$MoneyBackground/MoneyLabel.update_money()
 		bat.add_to_group(\"bats\")
 		add_child(bat)
 	else:
@@ -150,15 +148,16 @@ func _on_BatButton_pressed():
 
 func _on_BottomScreen_area_entered(area):
 	if area.name_check == \"guano\":
-		area.is_fallen_off_screen = true
-	if area.name_check == \"food\" || area.name_check == \"guano\":
+		area.get_child(3).start()
+		area.is_at_bottom = true
+	if area.name_check == \"food\":
 		area.queue_free()
 	if area.name_check == \"bat\":
 		if !area.isAlive:
 			area.queue_free()
 	
 func no_more_money():
-	$TextureRect/NoMoney.play(\"NoMoney\")
+	$MoneyBackground/NoMoney.play(\"NoMoney\")
 	
 func check_money(itemCost):
 	return self.money > itemCost || is_equal_approx(self.money, itemCost)
@@ -166,8 +165,7 @@ func check_money(itemCost):
 func _on_Main_child_exiting_tree(node):
 	if node.get_class() == \"Area2D\":
 		if node.name_check == \"guano\":
-			if !node.is_fallen_off_screen:
-				print(node.get_class())
+			if !node.is_gone:
 				collect_guano.play()
 
 func _on_Main_child_entered_tree(node):
@@ -183,7 +181,7 @@ func _on_FoodDropQuantityButton_pressed():
 		if check_money(food_quantity_upgrade_cost):
 			self.food_allowed_onscreen += 1
 			self.money -= food_quantity_upgrade_cost
-			$MoneyLabel.update_money()
+			$MoneyBackground/MoneyLabel.update_money()
 			$FoodDropQuantityButton.text = \"X\" + str(food_allowed_onscreen)
 			if food_allowed_onscreen == 10:
 				$FoodDropQuantityButton/Label.text = \"MAX\"
@@ -197,7 +195,7 @@ func _on_FoodUpgradeButton_pressed():
 		if check_money(food_quality_upgrade_cost):
 			food_quality_level += 1
 			self.money -= food_quality_upgrade_cost
-			$MoneyLabel.update_money()
+			$MoneyBackground/MoneyLabel.update_money()
 			if food_quality_level < 3: 
 				$FoodUpgradeButton.icon = load(\"res://images/grapes.png\")
 			else:
@@ -213,7 +211,7 @@ func _on_WaterGunUpgradeButton_pressed():
 		if check_money(weapon_upgrade_cost):
 			weapon_strength += 1
 			self.money -= weapon_upgrade_cost
-			$MoneyLabel.update_money()
+			$MoneyBackground/MoneyLabel.update_money()
 			if weapon_strength < 3:
 				$WaterGunUpgradeButton.text = \"X\" + str(weapon_strength)
 			else: 
@@ -225,7 +223,7 @@ func _on_FarmButton_pressed():
 	if (check_money(wincon_cost)):
 		wincon += 1
 		self.money -= wincon_cost
-		$MoneyLabel.update_money()
+		$MoneyBackground/MoneyLabel.update_money()
 		if (wincon >= 3):
 			get_tree().paused = true
 			$WinScreen/TimeElapsed.text = \"Time Elapsed: \" + str(time_elapsed)
@@ -234,28 +232,55 @@ func _on_FarmButton_pressed():
 	else: 
 		no_more_money()
 
-
-
 func _on_SpawnTimer_timeout():
 	var spawn_chance = $SpawnTimer.rng.randf()
 	if spawn_chance > 0.5:
-		var crow = enemy_packed_scene.instance().duplicate()
-		crow.position = Vector2(rng.randi_range(summon_buffer, get_viewport().get_visible_rect().size.x - summon_buffer), rng.randi_range(summon_buffer, get_viewport().get_visible_rect().size.y - summon_buffer))
-		add_child(crow)
-		
+		$EnemyApproachesLabel.visible = true
+		$EnemyApproachesLabel/EnemyApproachesTimer.start()
 
-
-
-
+func _on_EnemyApproachesTimer_timeout():
+	$EnemyApproachesLabel.visible = false
+	for bat in get_tree().get_nodes_in_group(\"bats\"):
+		bat.hunger_timer.paused = true
+		print(bat.hunger_timer.is_paused())
+		bat.death_timer.paused = true
+		print(bat.death_timer.is_paused())
+	$EnemyApproachesLabel/EnemyApproachesTimer.stop()
+	$SpawnTimer.stop()
+	var reaper = enemy_packed_scene.instance().duplicate()
+	reaper.position = Vector2(rng.randi_range(summon_buffer, get_viewport().get_visible_rect().size.x - summon_buffer), rng.randi_range(summon_buffer, get_viewport().get_visible_rect().size.y - summon_buffer))
+	reaper.add_to_group(\"enemies\")
+	add_child(reaper)
 "
 
 [sub_resource type="RectangleShape2D" id=2]
-extents = Vector2( 74, 538 )
+extents = Vector2( 90.75, 538 )
 
 [sub_resource type="RectangleShape2D" id=3]
-extents = Vector2( 956, 75 )
+extents = Vector2( 956, 83.5 )
 
 [sub_resource type="CircleShape2D" id=4]
+
+[sub_resource type="DynamicFont" id=6]
+font_data = ExtResource( 21 )
+
+[sub_resource type="DynamicFont" id=7]
+font_data = ExtResource( 21 )
+
+[sub_resource type="DynamicFont" id=8]
+font_data = ExtResource( 21 )
+
+[sub_resource type="DynamicFont" id=9]
+font_data = ExtResource( 21 )
+
+[sub_resource type="DynamicFont" id=10]
+font_data = ExtResource( 21 )
+
+[sub_resource type="DynamicFont" id=11]
+font_data = ExtResource( 21 )
+
+[sub_resource type="DynamicFont" id=12]
+font_data = ExtResource( 21 )
 
 [sub_resource type="Animation" id=5]
 resource_name = "NoMoney"
@@ -272,6 +297,15 @@ tracks/0/keys = {
 "values": [ Color( 1, 0, 0, 1 ), Color( 1, 1, 1, 1 ), Color( 1, 0, 0, 1 ), Color( 1, 1, 1, 1 ) ]
 }
 
+[sub_resource type="DynamicFont" id=13]
+font_data = ExtResource( 21 )
+
+[sub_resource type="DynamicFont" id=14]
+size = 48
+outline_size = 3
+outline_color = Color( 0, 0, 0, 1 )
+font_data = ExtResource( 21 )
+
 [node name="Main" type="Node"]
 script = SubResource( 1 )
 summon_buffer = 301
@@ -279,7 +313,6 @@ summon_buffer = 301
 [node name="GameOverScreen" parent="." instance=ExtResource( 19 )]
 pause_mode = 2
 visible = false
-color = Color( 0.133333, 0.133333, 0.411765, 1 )
 
 [node name="WinScreen" parent="." instance=ExtResource( 20 )]
 pause_mode = 2
@@ -303,11 +336,12 @@ mouse_filter = 2
 color = Color( 0.211765, 0.219608, 0.219608, 1 )
 
 [node name="Sprite" type="Sprite" parent="CanvasLayer"]
-position = Vector2( 983, 832 )
+position = Vector2( 993, 891 )
 scale = Vector2( 0.9, 0.9 )
 z_index = -1
 texture = ExtResource( 1 )
 offset = Vector2( -25.5555, -335.556 )
+script = ExtResource( 22 )
 
 [node name="SideBar2" type="TextureRect" parent="CanvasLayer"]
 margin_left = 1068.0
@@ -340,7 +374,6 @@ expand = true
 stretch_mode = 1
 
 [node name="LeftScreen" type="Area2D" parent="CanvasLayer"]
-visible = false
 script = ExtResource( 2 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CanvasLayer/LeftScreen"]
@@ -348,24 +381,21 @@ position = Vector2( 75, 540.5 )
 shape = SubResource( 2 )
 
 [node name="RightScreen" type="Area2D" parent="CanvasLayer"]
-visible = false
 script = ExtResource( 3 )
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="CanvasLayer/RightScreen"]
-position = Vector2( 1838.5, 540 )
+position = Vector2( 1821.75, 540 )
 shape = SubResource( 2 )
 
 [node name="TopScreen" type="Area2D" parent="CanvasLayer"]
-visible = false
 position = Vector2( 694, -137 )
 script = ExtResource( 4 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CanvasLayer/TopScreen"]
-position = Vector2( 262, 212 )
+position = Vector2( 262, 220.5 )
 shape = SubResource( 3 )
 
 [node name="BottomScreen" type="Area2D" parent="CanvasLayer"]
-visible = false
 position = Vector2( 1388, -274 )
 script = ExtResource( 5 )
 
@@ -381,9 +411,9 @@ scale = Vector2( 0.5, 0.5 )
 shape = SubResource( 4 )
 
 [node name="BatButton" type="Button" parent="."]
-margin_left = 353.0
+margin_left = 350.0
 margin_top = 25.0
-margin_right = 553.0
+margin_right = 600.0
 margin_bottom = 125.0
 hint_tooltip = "Click here to buy a bat!"
 mouse_default_cursor_shape = 2
@@ -392,36 +422,39 @@ icon_align = 1
 
 [node name="Label" type="Label" parent="BatButton"]
 margin_top = 64.0
-margin_right = 200.0
+margin_right = 250.0
 margin_bottom = 100.0
 rect_pivot_offset = Vector2( 100, 387 )
+custom_fonts/font = SubResource( 6 )
 text = "Bat: $1.00"
 align = 1
 valign = 1
 
 [node name="FoodDropQuantityButton" type="Button" parent="."]
-margin_left = 563.0
+margin_left = 610.0
 margin_top = 25.0
-margin_right = 763.0
+margin_right = 860.0
 margin_bottom = 125.0
 rect_pivot_offset = Vector2( 108, 163 )
 hint_tooltip = "The amount of food you can drop at once"
 mouse_default_cursor_shape = 2
+custom_fonts/font = SubResource( 7 )
 text = "X1"
 
 [node name="Label" type="Label" parent="FoodDropQuantityButton"]
 margin_top = 64.0
-margin_right = 200.0
+margin_right = 250.0
 margin_bottom = 100.0
 rect_pivot_offset = Vector2( 100, 387 )
+custom_fonts/font = SubResource( 8 )
 text = "Food Quantity: $1.50"
 align = 1
 valign = 1
 
 [node name="FoodUpgradeButton" type="Button" parent="."]
-margin_left = 773.0
+margin_left = 870.0
 margin_top = 25.0
-margin_right = 973.0
+margin_right = 1120.0
 margin_bottom = 125.0
 rect_pivot_offset = Vector2( 108, 163 )
 hint_tooltip = "Your current food quality"
@@ -431,42 +464,46 @@ icon_align = 1
 
 [node name="Label" type="Label" parent="FoodUpgradeButton"]
 margin_top = 64.0
-margin_right = 200.0
+margin_right = 250.0
 margin_bottom = 100.0
 rect_pivot_offset = Vector2( 27, 61 )
+custom_fonts/font = SubResource( 9 )
 text = "Food Quality: $2.50"
 align = 1
 valign = 1
 
 [node name="WaterGunUpgradeButton" type="Button" parent="."]
-margin_left = 983.0
+margin_left = 1130.0
 margin_top = 25.0
-margin_right = 1183.0
+margin_right = 1380.0
 margin_bottom = 125.0
 rect_pivot_offset = Vector2( 108, 163 )
+custom_fonts/font = SubResource( 10 )
 text = "x1"
 
 [node name="Label2" type="Label" parent="WaterGunUpgradeButton"]
 margin_top = 64.0
-margin_right = 200.0
+margin_right = 250.0
 margin_bottom = 100.0
 rect_pivot_offset = Vector2( -1048, 372 )
+custom_fonts/font = SubResource( 11 )
 text = "Weapon Upgrade: $4.00"
 align = 1
 valign = 1
 
 [node name="FarmButton" type="Button" parent="."]
-margin_left = 1193.0
+margin_left = 1390.0
 margin_top = 25.0
-margin_right = 1393.0
+margin_right = 1640.0
 margin_bottom = 125.0
 rect_pivot_offset = Vector2( 108, 163 )
 
 [node name="Label2" type="Label" parent="FarmButton"]
 margin_top = 64.0
-margin_right = 200.0
+margin_right = 250.0
 margin_bottom = 100.0
 rect_pivot_offset = Vector2( -1048, 372 )
+custom_fonts/font = SubResource( 12 )
 text = "Wincon: $25.00"
 align = 1
 valign = 1
@@ -489,24 +526,24 @@ stream = ExtResource( 13 )
 [node name="Piano" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 14 )
 
-[node name="TextureRect" type="TextureRect" parent="."]
+[node name="MoneyBackground" type="TextureRect" parent="."]
 margin_left = 25.0
 margin_top = 25.0
 margin_right = 343.0
 margin_bottom = 125.0
 texture = ExtResource( 16 )
 
-[node name="NoMoney" type="AnimationPlayer" parent="TextureRect"]
+[node name="NoMoney" type="AnimationPlayer" parent="MoneyBackground"]
 reset_on_save = false
 anims/NoMoney = SubResource( 5 )
 
-[node name="MoneyLabel" type="Label" parent="."]
-margin_left = 36.0
-margin_top = 36.0
-margin_right = 333.0
-margin_bottom = 115.0
+[node name="MoneyLabel" type="Label" parent="MoneyBackground"]
+margin_right = 318.0
+margin_bottom = 100.0
+rect_pivot_offset = Vector2( 458, 599 )
 hint_tooltip = "Your available money"
 mouse_filter = 0
+custom_fonts/font = SubResource( 13 )
 text = "Money: $2.00"
 align = 1
 valign = 1
@@ -516,10 +553,24 @@ script = ExtResource( 8 )
 script = ExtResource( 18 )
 
 [node name="ElapsedTime" type="Label" parent="."]
-margin_left = 1409.0
-margin_top = 33.0
-margin_right = 1705.0
-margin_bottom = 117.0
+margin_left = 1649.0
+margin_top = 35.0
+margin_right = 1890.0
+margin_bottom = 119.0
+
+[node name="EnemyApproachesLabel" type="Label" parent="."]
+visible = false
+margin_top = 850.0
+margin_right = 1920.0
+margin_bottom = 979.0
+custom_fonts/font = SubResource( 14 )
+text = "***WARNING***
+Enemy Approaches!"
+align = 1
+valign = 1
+
+[node name="EnemyApproachesTimer" type="Timer" parent="EnemyApproachesLabel"]
+script = ExtResource( 23 )
 
 [connection signal="child_entered_tree" from="." to="." method="_on_Main_child_entered_tree"]
 [connection signal="child_exiting_tree" from="." to="." method="_on_Main_child_exiting_tree"]
@@ -534,3 +585,4 @@ margin_bottom = 117.0
 [connection signal="pressed" from="FarmButton" to="." method="_on_FarmButton_pressed"]
 [connection signal="child_exiting_tree" from="CollectGuano" to="." method="_on_CollectGuano_child_exiting_tree"]
 [connection signal="timeout" from="SpawnTimer" to="." method="_on_SpawnTimer_timeout"]
+[connection signal="timeout" from="EnemyApproachesLabel/EnemyApproachesTimer" to="." method="_on_EnemyApproachesTimer_timeout"]

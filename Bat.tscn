@@ -18,7 +18,7 @@ var velocity = Vector2(0, 0)
 var game_over = preload(\"GameOverScreen.tscn\")
 
 export var lower_speed_threshold : float = 50
-export var drop_threshold = 0.9993
+export var drop_threshold = 0.998
 var name_check : String = \"bat\";
 export var timesFed : float = 0;
 export var isHungry : bool = false
@@ -31,7 +31,8 @@ var rng = RandomNumberGenerator.new()
 onready var animated_sprite : AnimatedSprite = $AnimatedSprite
 onready var eat_sound : AudioStreamPlayer = $EatSound
 onready var gold_guano = load(\"res://images/goldenGuano.png\")
-
+onready var hunger_timer = $HungerTimer
+onready var death_timer = $DeathTimer
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	rng.randomize()
@@ -88,7 +89,7 @@ func _process(delta):
 	
 	var dropChance = rng.randf_range(0,1)
 	if dropChance > drop_threshold && self.isAlive:
-		print(\"Bat level: \" + str(bat_growth_level))
+		#print(\"Bat level: \" + str(bat_growth_level))
 		#print(\"Guano dropped\")
 		var guano = guano_packed_scene.instance().duplicate()
 		guano.position = self.position
@@ -108,17 +109,18 @@ func _on_Bat_area_entered(area):
 		
 		$HungerTimer.wait_time = $HungerTimer.time_base * area.satiety_factor
 		area.free()
-		$HungerTimer.paused = false
+		if get_tree().get_nodes_in_group(\"enemies\").size() == 0:
+			$HungerTimer.paused = false
 		if !$DeathTimer.is_stopped():
 			$DeathTimer.stop()
 		self.isHungry = false
 		self.modulate = self.orginal_color
 		print(self.timesFed)
 		if(self.timesFed >= 4 && self.bat_growth_level == 1):
-			self.scale = Vector2(1.5, 1.5)
+			self.scale = Vector2(1.5 * self.scale.x, 1.5 * self.scale.y)
 			self.bat_growth_level += 1
 		if(self.timesFed >= 10 && self.bat_growth_level == 2):
-			self.scale = Vector2(2, 2)
+			self.scale = Vector2(1.5 * self.scale.x, 1.5 * self.scale.y)
 			self.bat_growth_level += 1
 	elif area.name_check == \"bat\":
 		print(\"FUNGUS\")
@@ -167,8 +169,6 @@ func _on_AnimatedSprite_animation_finished():
 func game_over():
 	get_tree().paused = true
 	get_node(\"../GameOverScreen\").visible = true 
-
-
 "
 
 [sub_resource type="AtlasTexture" id=26]
@@ -202,11 +202,6 @@ animations = [ {
 "name": "death",
 "speed": 10.0
 }, {
-"frames": [  ],
-"loop": true,
-"name": "eat",
-"speed": 10.0
-}, {
 "frames": [ SubResource( 28 ), SubResource( 29 ), SubResource( 30 ), SubResource( 31 ) ],
 "loop": true,
 "name": "fly",
@@ -214,10 +209,11 @@ animations = [ {
 } ]
 
 [sub_resource type="CapsuleShape2D" id=24]
-radius = 13.0
-height = 12.0
+radius = 8.00001
+height = 0.0
 
 [node name="Bat" type="Area2D" groups=["Bat"]]
+scale = Vector2( 1.5, 1.5 )
 z_index = 1
 collision_mask = 13
 script = SubResource( 25 )
@@ -228,10 +224,10 @@ __meta__ = {
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
 scale = Vector2( 1.5, 1.5 )
 frames = SubResource( 14 )
-animation = "death"
+animation = "fly"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2( 3, 0 )
+position = Vector2( 0, -3 )
 rotation = 1.5708
 shape = SubResource( 24 )
 

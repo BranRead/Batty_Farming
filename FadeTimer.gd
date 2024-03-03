@@ -8,10 +8,15 @@ extends Timer
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	self.wait_time = 10.0
+	self.wait_time = 2.0
 	self.autostart = false
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 #func _process(delta):
 #	pass
+
+
+func _on_FadeTimer_timeout():
+	get_parent().queue_free()
+	

@@ -5,8 +5,11 @@ var name_check : String = "guano"
 var is_selected : bool = false
 var normal_worth : float = 0.25
 var gold_worth : float = 0.75
-onready var collect_sound : AudioStreamPlayer = $CollectSound
-var is_fallen_off_screen = false
+
+var is_at_bottom = false
+var is_gone = false
+var fade_delta = 0
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -14,8 +17,15 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
-	self.position.y += falling_speed * delta
-	
+	if is_at_bottom == false:
+		self.position.y += falling_speed * delta
+	else: 
+		fade_delta += delta
+		self.modulate.a = 1 - (fade_delta/self.get_child(3).wait_time)
+		if is_equal_approx(self.modulate.a, 0):
+			self.is_gone = true
+			self.queue_free()
+
 	if Input.is_action_just_pressed("click") && is_selected:
 		#print("Clicking Guano")
 		collect_guano()
@@ -28,10 +38,10 @@ func _on_Guano_mouse_exited():
 
 func collect_guano():
 	get_parent().guano_collected += 1
-	collect_sound.play()
+	
 	if $AnimatedSprite.animation == "base":
 		get_parent().money += self.normal_worth
 	else:
 		get_parent().money += self.gold_worth
-	get_parent().get_node("MoneyLabel").update_money()
+	get_parent().get_node("MoneyBackground/MoneyLabel").update_money()
 	self.queue_free() 
