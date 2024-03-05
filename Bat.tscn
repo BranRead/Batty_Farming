@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=2]
+[gd_scene load_steps=18 format=2]
 
 [ext_resource path="res://Timer.gd" type="Script" id=1]
 [ext_resource path="res://images/16x16 Bat.png" type="Texture" id=2]
@@ -170,8 +170,8 @@ func bat_death():
 	self.velocity.y = self.falling_speed
 
 func _on_AnimatedSprite_animation_finished():
-	if [\"eat\"].has(animated_sprite.animation):
-		animation_locked = false
+	if [\"death_enemy\"].has($AnimatedSprite.animation):
+		self.queue_free()
 
 func game_over():
 	get_tree().paused = true
@@ -185,6 +185,22 @@ region = Rect2( 0, 256, 64, 64 )
 [sub_resource type="AtlasTexture" id=27]
 atlas = ExtResource( 2 )
 region = Rect2( 64, 256, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=32]
+atlas = ExtResource( 2 )
+region = Rect2( 0, 192, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=33]
+atlas = ExtResource( 2 )
+region = Rect2( 64, 192, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=34]
+atlas = ExtResource( 2 )
+region = Rect2( 128, 192, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=35]
+atlas = ExtResource( 2 )
+region = Rect2( 192, 192, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=28]
 atlas = ExtResource( 2 )
@@ -209,6 +225,11 @@ animations = [ {
 "name": "death",
 "speed": 10.0
 }, {
+"frames": [ SubResource( 32 ), SubResource( 33 ), SubResource( 34 ), SubResource( 35 ) ],
+"loop": false,
+"name": "death_enemy",
+"speed": 10.0
+}, {
 "frames": [ SubResource( 28 ), SubResource( 29 ), SubResource( 30 ), SubResource( 31 ) ],
 "loop": true,
 "name": "fly",
@@ -231,7 +252,7 @@ __meta__ = {
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
 scale = Vector2( 1.5, 1.5 )
 frames = SubResource( 14 )
-animation = "fly"
+animation = "death_enemy"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2( 0, -3 )
