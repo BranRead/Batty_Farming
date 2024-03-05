@@ -36,6 +36,8 @@ onready var death_timer = $DeathTimer
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	rng.randomize()
+	if !get_node(\"../\").is_game:
+		hunger_timer.paused = true
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
@@ -86,9 +88,14 @@ func _process(delta):
 			animated_sprite.flip_h = true
 		else: 
 			animated_sprite.flip_h = false
+	if self.position.x < 0 + 100 || self.position.x > get_node(\"../\").screen_size.x - 100:
+		self.velocity.x *= -1
+	elif self.position.y < 0 + 175 || self.position.y > get_node(\"../\").screen_size.y - 150 && self.isAlive:
+		self.velocity.y *= -1
+		
 	
 	var dropChance = rng.randf_range(0,1)
-	if dropChance > drop_threshold && self.isAlive:
+	if dropChance > drop_threshold && self.isAlive && get_node(\"../\").is_game:
 		#print(\"Bat level: \" + str(bat_growth_level))
 		#print(\"Guano dropped\")
 		var guano = guano_packed_scene.instance().duplicate()
@@ -168,7 +175,7 @@ func _on_AnimatedSprite_animation_finished():
 
 func game_over():
 	get_tree().paused = true
-	get_node(\"../GameOverScreen\").visible = true 
+	get_node(\"../GameOverLayer/GameOverScreen\").visible = true 
 "
 
 [sub_resource type="AtlasTexture" id=26]

@@ -60,4 +60,9 @@ func _process(delta):
 			self.position.y -= self.flee_speed * delta
 		else: 
 			self.position.y += self.flee_speed * delta
+			
+	#if self.position.x < 0 + 100 || self.position.x > get_node("../").screen_size.x - 100:
+	#	self.velocity.x *= -1
+	#elif self.position.y < 0 + 175 || self.position.y > get_node("../").screen_size.y - 150:
+	#	self.velocity.y *= -1
 

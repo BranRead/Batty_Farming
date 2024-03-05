@@ -18,8 +18,7 @@ func _ready():
 
 func _on_Enemy_area_entered(area):
 	if(area.name_check == "bat"):
-		area.remove_from_group("bats")
-		area.free()
+		area.bat_death()
 
 
 func _on_Enemy_input_event(viewport, event, shape_idx):
