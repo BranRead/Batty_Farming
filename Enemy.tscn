@@ -119,7 +119,6 @@ frames = SubResource( 7 )
 animation = "Damage"
 
 [node name="EnemyCollider" type="CollisionShape2D" parent="."]
-rotation = -0.274017
 shape = SubResource( 8 )
 script = ExtResource( 3 )
 

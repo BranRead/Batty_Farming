@@ -16,3 +16,7 @@ func _ready():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	self.position = get_global_mouse_position()
+
+
+func _on_AnimatedSprite_animation_finished():
+	$AnimatedSprite.frame = 0

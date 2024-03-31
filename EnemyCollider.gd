@@ -1,5 +1,6 @@
 extends CollisionShape2D
 
+var attack_packed_scene = preload("attack.tscn")
 
 # Declare member variables here. Examples:
 # var a = 2
@@ -17,6 +18,7 @@ func _ready():
 
 func _on_Enemy_area_entered(area):
 	if(area.name_check == "bat") && get_parent().health > 0:
+		
 		$"../AnimatedSprite".play("Attack")
 		area.animated_sprite.play("death_enemy")
 		area.animation_locked = true
@@ -24,6 +26,18 @@ func _on_Enemy_area_entered(area):
 
 func _on_Enemy_input_event(viewport, event, shape_idx):
 	if event.is_action_pressed("click") && $"../AnimatedSprite".animation != "Death":
+		
+		var attack = attack_packed_scene.instance().duplicate()
+		attack.position = event.position
+		get_node("/root/Main").add_child(attack)
+		print(str(event.position, " - ", $"..".position))
+		
+		if(get_node("/root/Main").weapon_strength == 1):
+			attack.get_child(0).play("fire")
+		if(get_node("/root/Main").weapon_strength == 2):
+			attack.get_child(0).play("lighting")
+		if(get_node("/root/Main").weapon_strength == 3):
+			attack.get_child(0).play("lightningDouble")
 		
 		$"../AnimatedSprite".play("Damage")
 		print(event.position)

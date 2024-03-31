@@ -13,5 +13,4 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
-	if self.paused == false && get_tree().get_nodes_in_group("enemies").size() > 0:
-		print("I will get hungry!")
+	pass

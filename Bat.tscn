@@ -122,7 +122,6 @@ func _on_Bat_area_entered(area):
 			$DeathTimer.stop()
 		self.isHungry = false
 		self.modulate = self.orginal_color
-		print(self.timesFed)
 		if(self.timesFed >= 4 && self.bat_growth_level == 1):
 			self.scale = Vector2(1.5 * self.scale.x, 1.5 * self.scale.y)
 			self.bat_growth_level += 1
@@ -141,16 +140,13 @@ func _on_Bat_area_entered(area):
 		#print(\"Right wall\")
 		self.velocity.x *= -1
 	elif area.name_check == \"bottomScreen\":
-		print(self.isAlive)
 		#print(\"Bottom wall\")
 		if self.isAlive:
 			self.velocity.y *= -1
 		else: 
-			print(\"Firing\")
 			self.free()
 
 func _on_Timer_timeout():
-	print(\"I'm hungry :(\")
 	$HungerTimer.paused = true
 	self.isHungry = true
 	self.modulate = Color(\"#c30010\")
