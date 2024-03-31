@@ -36,6 +36,10 @@ config/name="Insaniquarium"
 run/main_scene="res://TitleScreen.tscn"
 config/icon="res://icon.png"
 
+[autoload]
+
+GameLogic="*res://GameLogic.gd"
+
 [display]
 
 window/size/width=1920

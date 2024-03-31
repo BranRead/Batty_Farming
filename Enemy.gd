@@ -1,6 +1,6 @@
 extends Area2D
 
-var health : int = 10
+var health : int = 50
 var closest_bat
 var speed : float = 40
 var name_check : String = "enemy"

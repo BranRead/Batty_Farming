@@ -1,8 +1,9 @@
-[gd_scene load_steps=35 format=2]
+[gd_scene load_steps=41 format=2]
 
 [ext_resource path="res://images/02_PixelSky_1920x1080.png" type="Texture" id=1]
 [ext_resource path="res://images/starGrey.png" type="Texture" id=2]
-[ext_resource path="res://images/fire staff.png" type="Texture" id=3]
+[ext_resource path="res://images/fireStaff.png" type="Texture" id=3]
+[ext_resource path="res://images/PropsInPixels_16x36.png" type="Texture" id=4]
 [ext_resource path="res://BottomScreen.gd" type="Script" id=5]
 [ext_resource path="res://Mouse.gd" type="Script" id=6]
 [ext_resource path="res://images/batIcon.png" type="Texture" id=7]
@@ -11,30 +12,38 @@
 [ext_resource path="res://audio/buybat.mp3" type="AudioStream" id=10]
 [ext_resource path="res://audio/fooddrop.mp3" type="AudioStream" id=11]
 [ext_resource path="res://audio/click.mp3" type="AudioStream" id=12]
-[ext_resource path="res://audio/rain-sound-and-rainforest-6293.mp3" type="AudioStream" id=13]
+[ext_resource path="res://audio/UI_007.wav" type="AudioStream" id=13]
 [ext_resource path="res://audio/atmospheric-soundscape-152493.mp3" type="AudioStream" id=14]
 [ext_resource path="res://images/topPanel.png" type="Texture" id=15]
-[ext_resource path="res://images/moneyPanel.png" type="Texture" id=16]
+[ext_resource path="res://images/tabs.tres" type="Theme" id=16]
 [ext_resource path="res://images/foodIcon.png" type="Texture" id=17]
 [ext_resource path="res://SpawnTimer.gd" type="Script" id=18]
 [ext_resource path="res://GameOverScreen.tscn" type="PackedScene" id=19]
 [ext_resource path="res://WinScreen.tscn" type="PackedScene" id=20]
 [ext_resource path="res://KodeMono-Regular.ttf" type="DynamicFontData" id=21]
+[ext_resource path="res://images/PropsInPixels_16x22.png" type="Texture" id=22]
 [ext_resource path="res://EnemyApproachesTimer.gd" type="Script" id=23]
+[ext_resource path="res://audio/Fireball_Whoosh_5.wav" type="AudioStream" id=24]
+[ext_resource path="res://audio/Electricity_v3_wav.wav" type="AudioStream" id=25]
+[ext_resource path="res://audio/Electricity_v4_wav.wav" type="AudioStream" id=26]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends Node
 var is_game = true
+
 var strawberry_packed_scene = preload(\"Strawberry.tscn\")
 var grapes_packed_scene = preload(\"Grapes.tscn\")
 var banana_packed_scene = preload(\"Banana.tscn\")
 var bat_packed_scene = preload(\"Bat.tscn\")
 var enemy_packed_scene = preload(\"Enemy.tscn\")
+var fireStaff = load(\"res://images/fireStaff.png\")
+var lightningStaff = load(\"res://images/lightningStaff.png\")
+var lightningPlusStaff = load(\"res://images/lightningPlusStaff.png\")
 var rng = RandomNumberGenerator.new()
 var guano_collected : int = 0
 var is_mouse_touching_something : bool = false 
 var money : float = 2.00
-var bat_cost : float = 1.00
+var bat_cost : float = 0.50
 var food_allowed_onscreen: int = 1
 var food_quantity_upgrade_cost : float = 1.50
 var food_quality_upgrade_cost : float = 2.50
@@ -43,7 +52,7 @@ var weapon_strength : int = 1
 var weapon_upgrade_cost : float = 4.00
 export var summon_buffer : int = 200
 var time_elapsed : float = 0
-var wincon_cost : float = 10.00
+var wincon_cost : float = 25.00
 var wincon : int = 0
 onready var screen_size = get_viewport().size
 
@@ -51,14 +60,17 @@ onready var collect_guano : AudioStreamPlayer = $CollectGuano
 onready var food_drop : AudioStreamPlayer = $FoodDrop
 onready var buy_bat : AudioStreamPlayer = $BuyBat
 onready var click : AudioStreamPlayer = $Click
-onready var rain : AudioStreamPlayer = $Rain
+onready var click_failed : AudioStreamPlayer = $ClickFailed
+
 onready var piano : AudioStreamPlayer = $Piano
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	print(screen_size)
+	
+	$CanvasLayer/BottomScreen.position.y = screen_size.y
 	rng.randomize()
-	rain.play()
+	#rain.play()
 	piano.play()
 	for n in 2:
 		var bat = bat_packed_scene.instance().duplicate()
@@ -71,10 +83,22 @@ func _process(delta):
 	time_elapsed += delta
 	if time_elapsed > 60 && $SpawnTimer.paused == true:
 		$SpawnTimer.paused = false
-	$ElapsedTime.text = \"%0.2f\" % time_elapsed
+	var minutes = time_elapsed / 60
+	$GameTimer/ElapsedTime.text = \"%02.0f\" % minutes + \":\" + \"%05.2f\" % time_elapsed
+	
+	if get_tree().get_nodes_in_group(\"enemies\").size() > 0:
+		if weapon_strength == 1:
+			Input.set_custom_mouse_cursor(fireStaff)
+		if weapon_strength == 2:
+			Input.set_custom_mouse_cursor(lightningStaff)
+		if weapon_strength == 3:
+			Input.set_custom_mouse_cursor(lightningPlusStaff)
+	else:
+		Input.set_custom_mouse_cursor(null)
 	if (Input.is_action_just_pressed(\"click\") && 
 	 !is_mouse_touching_something && 
-	 get_tree().get_nodes_in_group(\"enemies\").size() == 0):
+	 get_tree().get_nodes_in_group(\"enemies\").size() == 0 &&
+	get_viewport().get_mouse_position().y > 150):
 		print($Mouse.area_overlap)
 		var mouse_position = get_viewport().get_mouse_position()
 		var food_on_screen = get_tree().get_nodes_in_group(\"food\")
@@ -124,10 +148,10 @@ func _process(delta):
 		#bat.position = mouse_position
 		#add_child(bat)
 		
-		var enemy = enemy_packed_scene.instance().duplicate()
-		enemy.add_to_group(\"enemies\")
-		enemy.position = mouse_position
-		add_child(enemy)
+		#var enemy = enemy_packed_scene.instance().duplicate()
+		#enemy.add_to_group(\"enemies\")
+		#enemy.position = mouse_position
+		#add_child(enemy)
 
 func _on_Mouse_area_entered(area):
 	#print(\"Can't drop food\")
@@ -141,8 +165,9 @@ func _on_Mouse_area_exited(area):
 	$Mouse.area_overlap = null
 
 func _on_BatButton_pressed():
-	click.play();
+
 	if check_money(bat_cost):
+		click.play();
 		#Duplicate is the most important part 
 		#Otherwise the bats all share the same script
 		var bat = bat_packed_scene.instance().duplicate()
@@ -152,6 +177,7 @@ func _on_BatButton_pressed():
 		bat.add_to_group(\"bats\")
 		add_child(bat)
 	else:
+		click_failed.play()
 		no_more_money();
 
 func _on_BottomScreen_area_entered(area):
@@ -185,8 +211,8 @@ func _on_Main_child_entered_tree(node):
 
 func _on_FoodDropQuantityButton_pressed():
 	if food_allowed_onscreen < 10:
-		click.play();
 		if check_money(food_quantity_upgrade_cost):
+			click.play();
 			self.food_allowed_onscreen += 1
 			self.money -= food_quantity_upgrade_cost
 			$MoneyBackground/MoneyLabel.update_money()
@@ -195,12 +221,14 @@ func _on_FoodDropQuantityButton_pressed():
 				$FoodDropQuantityButton/Label.text = \"MAX\"
 				$FoodDropQuantityButton.mouse_default_cursor_shape = Control.CURSOR_ARROW
 		else: 
+			click_failed.play()
 			no_more_money()
 
 func _on_FoodUpgradeButton_pressed():
 	if food_quality_level < 3:
-		click.play();
+		
 		if check_money(food_quality_upgrade_cost):
+			click.play();
 			food_quality_level += 1
 			self.money -= food_quality_upgrade_cost
 			$MoneyBackground/MoneyLabel.update_money()
@@ -211,25 +239,29 @@ func _on_FoodUpgradeButton_pressed():
 				$FoodUpgradeButton/Label.text = \"MAX\"
 				$FoodUpgradeButton.mouse_default_cursor_shape = Control.CURSOR_ARROW
 		else: 
+			click_failed.play()
 			no_more_money()
 
 func _on_WaterGunUpgradeButton_pressed():
 	if weapon_strength < 3:
-		click.play()
+		
 		if check_money(weapon_upgrade_cost):
+			click.play()
 			weapon_strength += 1
 			self.money -= weapon_upgrade_cost
 			$MoneyBackground/MoneyLabel.update_money()
 			if weapon_strength == 2:
-				$WaterGunUpgradeButton.icon = load(\"res://images/mage staff.png\")
+				$WaterGunUpgradeButton.icon = load(\"res://images/lightningStaff.png\")
 			if weapon_strength == 3:
-				$WaterGunUpgradeButton.icon = load(\"res://images/holy staff.png\")
+				$WaterGunUpgradeButton.icon = load(\"res://images/lightningPlusStaff.png\")
 				$WaterGunUpgradeButton/Label2.text = \"MAX\"
 		else: 
+			click_failed.play()
 			no_more_money()
 			
 func _on_FarmButton_pressed():
 	if (check_money(wincon_cost)):
+		click.play()
 		wincon += 1
 		self.money -= wincon_cost
 		$MoneyBackground/MoneyLabel.update_money()
@@ -240,9 +272,11 @@ func _on_FarmButton_pressed():
 		if (wincon >= 3):
 			$FarmButton.icon = load(\"res://images/starFull.png\")
 			get_tree().paused = true
-			$WinLayer/WinScreen/TimeElapsed.text = \"Time Elapsed: \" + \"%0.2f\" % time_elapsed
+			var minutes = time_elapsed / 60 
+			$WinLayer/WinScreen/TimeElapsed.text = \"Time Elapsed: \" + \"%02.0f\" % minutes + \":\" + \"%05.2f\" % time_elapsed
 			$WinLayer/WinScreen.visible = true
 	else: 
+		click_failed.play()
 		no_more_money()
 
 func _on_SpawnTimer_timeout():
@@ -267,7 +301,7 @@ func _on_EnemyApproachesTimer_timeout():
 "
 
 [sub_resource type="RectangleShape2D" id=3]
-extents = Vector2( 956, 83.5 )
+extents = Vector2( 979, 84.0547 )
 
 [sub_resource type="CircleShape2D" id=4]
 
@@ -290,6 +324,9 @@ font_data = ExtResource( 21 )
 font_data = ExtResource( 21 )
 
 [sub_resource type="DynamicFont" id=12]
+font_data = ExtResource( 21 )
+
+[sub_resource type="DynamicFont" id=15]
 font_data = ExtResource( 21 )
 
 [sub_resource type="Animation" id=5]
@@ -353,47 +390,15 @@ expand = true
 stretch_mode = 1
 
 [node name="Sprite" type="Sprite" parent="CanvasLayer"]
-position = Vector2( 960, 540 )
+position = Vector2( 959, 541 )
 texture = ExtResource( 1 )
 
 [node name="BottomScreen" type="Area2D" parent="CanvasLayer"]
-position = Vector2( 1388, -274 )
+position = Vector2( 960, 1080 )
 script = ExtResource( 5 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CanvasLayer/BottomScreen"]
-position = Vector2( -426, 1337 )
 shape = SubResource( 3 )
-
-[node name="Node2D2" type="Node2D" parent="CanvasLayer"]
-z_index = -3
-
-[node name="CanvasLayer" type="CanvasLayer" parent="CanvasLayer/Node2D2"]
-visible = false
-
-[node name="SideBar" type="TextureRect" parent="CanvasLayer/Node2D2/CanvasLayer"]
-margin_left = -798.0
-margin_top = 550.0
-margin_right = 282.0
-margin_bottom = 600.0
-rect_rotation = 90.0
-rect_pivot_offset = Vector2( 695.728, 150 )
-texture = ExtResource( 15 )
-expand = true
-stretch_mode = 1
-
-[node name="CanvasLayer2" type="CanvasLayer" parent="CanvasLayer/Node2D2"]
-visible = false
-
-[node name="SideBar2" type="TextureRect" parent="CanvasLayer/Node2D2/CanvasLayer2"]
-margin_left = 1074.0
-margin_top = 550.0
-margin_right = 2158.0
-margin_bottom = 600.0
-rect_rotation = 90.0
-rect_pivot_offset = Vector2( 695.728, 150 )
-texture = ExtResource( 15 )
-expand = true
-stretch_mode = 1
 
 [node name="Mouse" type="Area2D" parent="."]
 script = ExtResource( 6 )
@@ -403,30 +408,31 @@ scale = Vector2( 0.5, 0.5 )
 shape = SubResource( 4 )
 
 [node name="BatButton" type="Button" parent="."]
-margin_left = 350.0
-margin_top = 25.0
-margin_right = 600.0
-margin_bottom = 125.0
+margin_left = 720.0
+margin_top = 30.0
+margin_right = 945.0
+margin_bottom = 120.0
 hint_tooltip = "Click here to buy a bat!"
 mouse_default_cursor_shape = 2
 icon = ExtResource( 7 )
 icon_align = 1
 
 [node name="Label" type="Label" parent="BatButton"]
-margin_top = 64.0
-margin_right = 250.0
-margin_bottom = 100.0
+margin_left = 1.0
+margin_top = 61.0
+margin_right = 226.0
+margin_bottom = 97.0
 rect_pivot_offset = Vector2( 100, 387 )
 custom_fonts/font = SubResource( 6 )
-text = "Bat: $1.00"
+text = "Bat: $0.50"
 align = 1
 valign = 1
 
 [node name="FoodDropQuantityButton" type="Button" parent="."]
-margin_left = 610.0
-margin_top = 25.0
-margin_right = 860.0
-margin_bottom = 125.0
+margin_left = 955.0
+margin_top = 30.0
+margin_right = 1180.0
+margin_bottom = 120.0
 rect_pivot_offset = Vector2( 108, 163 )
 hint_tooltip = "The amount of food you can drop at once"
 mouse_default_cursor_shape = 2
@@ -434,9 +440,10 @@ custom_fonts/font = SubResource( 7 )
 text = "X1"
 
 [node name="Label" type="Label" parent="FoodDropQuantityButton"]
-margin_top = 64.0
-margin_right = 250.0
-margin_bottom = 100.0
+margin_left = 1.0
+margin_top = 61.0
+margin_right = 226.0
+margin_bottom = 97.0
 rect_pivot_offset = Vector2( 100, 387 )
 custom_fonts/font = SubResource( 8 )
 text = "Food Quantity: $1.50"
@@ -444,10 +451,10 @@ align = 1
 valign = 1
 
 [node name="FoodUpgradeButton" type="Button" parent="."]
-margin_left = 870.0
-margin_top = 25.0
-margin_right = 1120.0
-margin_bottom = 125.0
+margin_left = 1190.0
+margin_top = 30.0
+margin_right = 1415.0
+margin_bottom = 120.0
 rect_pivot_offset = Vector2( 108, 163 )
 hint_tooltip = "Your current food quality"
 mouse_default_cursor_shape = 2
@@ -455,9 +462,10 @@ icon = ExtResource( 17 )
 icon_align = 1
 
 [node name="Label" type="Label" parent="FoodUpgradeButton"]
-margin_top = 64.0
-margin_right = 250.0
-margin_bottom = 100.0
+margin_left = 1.0
+margin_top = 61.0
+margin_right = 226.0
+margin_bottom = 97.0
 rect_pivot_offset = Vector2( 27, 61 )
 custom_fonts/font = SubResource( 9 )
 text = "Food Quality: $2.50"
@@ -465,19 +473,20 @@ align = 1
 valign = 1
 
 [node name="WaterGunUpgradeButton" type="Button" parent="."]
-margin_left = 1130.0
-margin_top = 25.0
-margin_right = 1380.0
-margin_bottom = 125.0
+margin_left = 1425.0
+margin_top = 30.0
+margin_right = 1650.0
+margin_bottom = 120.0
 rect_pivot_offset = Vector2( 108, 163 )
 custom_fonts/font = SubResource( 10 )
 icon = ExtResource( 3 )
 icon_align = 1
 
 [node name="Label2" type="Label" parent="WaterGunUpgradeButton"]
-margin_top = 64.0
-margin_right = 250.0
-margin_bottom = 100.0
+margin_left = 1.0
+margin_top = 61.0
+margin_right = 226.0
+margin_bottom = 97.0
 rect_pivot_offset = Vector2( -1048, 372 )
 custom_fonts/font = SubResource( 11 )
 text = "Weapon Upgrade: $4.00"
@@ -485,18 +494,19 @@ align = 1
 valign = 1
 
 [node name="FarmButton" type="Button" parent="."]
-margin_left = 1390.0
-margin_top = 25.0
-margin_right = 1640.0
-margin_bottom = 125.0
+margin_left = 1660.0
+margin_top = 30.0
+margin_right = 1885.0
+margin_bottom = 120.0
 rect_pivot_offset = Vector2( 108, 163 )
 icon = ExtResource( 2 )
 icon_align = 1
 
 [node name="Label2" type="Label" parent="FarmButton"]
-margin_top = 64.0
-margin_right = 250.0
-margin_bottom = 100.0
+margin_left = 1.0
+margin_top = 61.0
+margin_right = 226.0
+margin_bottom = 97.0
 rect_pivot_offset = Vector2( -1048, 372 )
 custom_fonts/font = SubResource( 12 )
 text = "Ambrosia: $10.00"
@@ -512,27 +522,52 @@ stream = ExtResource( 11 )
 [node name="BuyBat" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 10 )
 
+[node name="ClickFailed" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 13 )
+
 [node name="Click" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 12 )
 
-[node name="Rain" type="AudioStreamPlayer" parent="."]
-stream = ExtResource( 13 )
-
 [node name="Piano" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 14 )
+volume_db = -5.0
 
-[node name="MoneyBackground" type="TextureRect" parent="."]
-margin_left = 25.0
+[node name="GameTimer" type="Panel" parent="."]
+margin_left = 365.0
 margin_top = 25.0
-margin_right = 343.0
+margin_right = 683.0
 margin_bottom = 125.0
-texture = ExtResource( 16 )
+rect_pivot_offset = Vector2( 851, 349 )
+theme = ExtResource( 16 )
+
+[node name="ElapsedTime" type="Label" parent="GameTimer"]
+margin_left = 145.0
+margin_top = 15.0
+margin_right = 226.0
+margin_bottom = 85.0
+custom_fonts/font = SubResource( 15 )
+text = "00:00.00"
+valign = 1
+
+[node name="Sprite" type="Sprite" parent="GameTimer"]
+position = Vector2( 115, 50 )
+scale = Vector2( 3, 3 )
+texture = ExtResource( 4 )
+
+[node name="MoneyBackground" type="Panel" parent="."]
+margin_left = 35.0
+margin_top = 25.0
+margin_right = 353.0
+margin_bottom = 125.0
+rect_pivot_offset = Vector2( 851, 349 )
+theme = ExtResource( 16 )
 
 [node name="NoMoney" type="AnimationPlayer" parent="MoneyBackground"]
 reset_on_save = false
 anims/NoMoney = SubResource( 5 )
 
 [node name="MoneyLabel" type="Label" parent="MoneyBackground"]
+margin_left = 38.0
 margin_right = 318.0
 margin_bottom = 100.0
 rect_pivot_offset = Vector2( 458, 599 )
@@ -544,14 +579,13 @@ align = 1
 valign = 1
 script = ExtResource( 8 )
 
+[node name="Sprite" type="Sprite" parent="MoneyBackground"]
+position = Vector2( 95, 50 )
+scale = Vector2( 3, 3 )
+texture = ExtResource( 22 )
+
 [node name="SpawnTimer" type="Timer" parent="."]
 script = ExtResource( 18 )
-
-[node name="ElapsedTime" type="Label" parent="."]
-margin_left = 1649.0
-margin_top = 35.0
-margin_right = 1890.0
-margin_bottom = 119.0
 
 [node name="EnemyApproachesLabel" type="Label" parent="."]
 visible = false
@@ -566,6 +600,18 @@ valign = 1
 
 [node name="EnemyApproachesTimer" type="Timer" parent="EnemyApproachesLabel"]
 script = ExtResource( 23 )
+
+[node name="Fire" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 24 )
+volume_db = -10.0
+
+[node name="Lightning" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 25 )
+volume_db = -10.0
+
+[node name="LightningPlus" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 26 )
+volume_db = -10.0
 
 [connection signal="child_entered_tree" from="." to="." method="_on_Main_child_entered_tree"]
 [connection signal="child_exiting_tree" from="." to="." method="_on_Main_child_exiting_tree"]

@@ -1,5 +1,7 @@
-extends Panel
+extends Node
 
+
+var fungus_chance = 0.1
 
 # Declare member variables here. Examples:
 # var a = 2
@@ -14,11 +16,3 @@ func _ready():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 #func _process(delta):
 #	pass
-
-func _on_PlayAgainButton_pressed():
-	get_tree().paused = false
-	get_tree().change_scene("res://TitleScreen.tscn")
-
-func _on_QuitButton_pressed():
-	get_tree().paused = false
-	get_tree().quit()

@@ -1,7 +1,9 @@
 extends CollisionShape2D
 
 var attack_packed_scene = preload("attack.tscn")
-
+onready var fireSound : AudioStreamPlayer = get_node("/root/Main/Fire")
+onready var lightningSound : AudioStreamPlayer = get_node("/root/Main/Lightning")
+onready var lightningPlusSound : AudioStreamPlayer = get_node("/root/Main/LightningPlus")
 # Declare member variables here. Examples:
 # var a = 2
 # var b = "text"
@@ -34,10 +36,13 @@ func _on_Enemy_input_event(viewport, event, shape_idx):
 		
 		if(get_node("/root/Main").weapon_strength == 1):
 			attack.get_child(0).play("fire")
+			fireSound.play()
 		if(get_node("/root/Main").weapon_strength == 2):
 			attack.get_child(0).play("lighting")
+			lightningSound.play()
 		if(get_node("/root/Main").weapon_strength == 3):
 			attack.get_child(0).play("lightningDouble")
+			lightningPlusSound.play()
 		
 		$"../AnimatedSprite".play("Damage")
 		print(event.position)

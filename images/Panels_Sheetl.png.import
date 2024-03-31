@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/moneyPanel.png-16508c06b6f686fc3ad313e1eb9f2d3b.stex"
+path="res://.import/Panels_Sheetl.png-d423c9b58014fcab6684ef547f2e6505.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://images/moneyPanel.png"
-dest_files=[ "res://.import/moneyPanel.png-16508c06b6f686fc3ad313e1eb9f2d3b.stex" ]
+source_file="res://images/Panels_Sheetl.png"
+dest_files=[ "res://.import/Panels_Sheetl.png-d423c9b58014fcab6684ef547f2e6505.stex" ]
 
 [params]
 
