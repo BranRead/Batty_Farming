@@ -1,10 +1,11 @@
-[gd_scene load_steps=13 format=2]
+[gd_scene load_steps=14 format=2]
 
 [ext_resource path="res://KodeMono-Regular.ttf" type="DynamicFontData" id=1]
 [ext_resource path="res://TitleScreen.gd" type="Script" id=2]
 [ext_resource path="res://images/02_PixelSky_1920x1080.png" type="Texture" id=3]
 [ext_resource path="res://Bat.tscn" type="PackedScene" id=4]
 [ext_resource path="res://images/popupMenus.tres" type="Theme" id=5]
+[ext_resource path="res://GetUserID.gd" type="Script" id=6]
 
 [sub_resource type="Theme" id=1]
 
@@ -60,19 +61,19 @@ align = 1
 valign = 1
 
 [node name="StartButton" type="Button" parent="StartGame/ColorRect"]
-margin_left = 125.0
-margin_top = 120.0
-margin_right = 225.0
-margin_bottom = 170.0
+margin_left = 200.0
+margin_top = 230.0
+margin_right = 300.0
+margin_bottom = 280.0
 rect_pivot_offset = Vector2( -835, -288 )
 custom_fonts/font = SubResource( 3 )
 text = "Start"
 
 [node name="QuitButton" type="Button" parent="StartGame/ColorRect"]
-margin_left = 125.0
-margin_top = 180.0
-margin_right = 225.0
-margin_bottom = 230.0
+margin_left = 50.0
+margin_top = 230.0
+margin_right = 150.0
+margin_bottom = 280.0
 rect_pivot_offset = Vector2( -835, -288 )
 custom_fonts/font = SubResource( 4 )
 text = "Quit"
@@ -100,7 +101,6 @@ position = Vector2( 1610, 330 )
 
 [node name="Options" type="CanvasLayer" parent="."]
 layer = 10
-visible = false
 
 [node name="ColorRect" type="Panel" parent="Options"]
 margin_left = 785.0
@@ -118,27 +118,27 @@ size_flags_horizontal = 5
 theme = SubResource( 1 )
 custom_colors/font_color = Color( 1, 1, 1, 1 )
 custom_fonts/font = SubResource( 2 )
-text = "Options"
+text = "Difficulty"
 align = 1
 valign = 1
 
 [node name="PlayButton" type="Button" parent="Options/ColorRect"]
-margin_left = 50.0
-margin_top = 230.0
-margin_right = 150.0
-margin_bottom = 280.0
-rect_pivot_offset = Vector2( -835, -288 )
-custom_fonts/font = SubResource( 3 )
-text = "Start"
-
-[node name="QuitButton" type="Button" parent="Options/ColorRect"]
 margin_left = 200.0
 margin_top = 230.0
 margin_right = 300.0
 margin_bottom = 280.0
 rect_pivot_offset = Vector2( -835, -288 )
+custom_fonts/font = SubResource( 3 )
+text = "Play"
+
+[node name="BackButton" type="Button" parent="Options/ColorRect"]
+margin_left = 50.0
+margin_top = 230.0
+margin_right = 150.0
+margin_bottom = 280.0
+rect_pivot_offset = Vector2( -835, -288 )
 custom_fonts/font = SubResource( 4 )
-text = "Quit"
+text = "Back"
 
 [node name="CheckBox" type="CheckBox" parent="Options/ColorRect"]
 margin_left = 100.0
@@ -188,16 +188,23 @@ margin_right = 260.0
 margin_bottom = 183.0
 theme = SubResource( 6 )
 custom_fonts/font = SubResource( 7 )
-text = "Clean your boots?"
+text = "Dust spores off 
+yourself?"
 align = 1
 valign = 1
+
+[node name="GetUserID" type="CanvasLayer" parent="."]
+script = ExtResource( 6 )
+
+[node name="HTTPRequest" type="HTTPRequest" parent="GetUserID"]
 
 [connection signal="pressed" from="StartGame/ColorRect/StartButton" to="." method="_on_StartButton_pressed"]
 [connection signal="pressed" from="StartGame/ColorRect/QuitButton" to="." method="_on_QuitButton_pressed"]
 [connection signal="pressed" from="Options/ColorRect/PlayButton" to="." method="_on_PlayButton_pressed"]
-[connection signal="pressed" from="Options/ColorRect/QuitButton" to="." method="_on_QuitButton_pressed"]
+[connection signal="pressed" from="Options/ColorRect/BackButton" to="." method="_on_BackButton_pressed"]
 [connection signal="pressed" from="Options/ColorRect/CheckBox" to="." method="_on_CheckBox_pressed"]
 [connection signal="pressed" from="Options/ColorRect/CheckBox2" to="." method="_on_CheckBox2_pressed"]
 [connection signal="toggled" from="Options/ColorRect/CheckBox2" to="." method="_on_CheckBox2_toggled"]
 [connection signal="pressed" from="Options/ColorRect/CheckBox3" to="." method="_on_CheckBox2_pressed"]
 [connection signal="toggled" from="Options/ColorRect/CheckBox3" to="." method="_on_CheckBox2_toggled"]
+[connection signal="request_completed" from="GetUserID/HTTPRequest" to="GetUserID" method="_on_HTTPRequest_request_completed"]
