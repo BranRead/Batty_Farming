@@ -1,5 +1,5 @@
 extends CanvasLayer
-var serverURL = "http://localhost/quantum_arcade/php/addScore.php"
+var serverURL = "https://quantum-arcade.com/php/addScore.php"
 
 
 
@@ -9,9 +9,9 @@ func _ready():
 
 func _send_request():
 	var client = HTTPClient.new()
-	var gameID = 2
+	var gameID = 4
 	#var score = get_node("/root/GameLogic").time_taken
-	var score = 10000000
+	
 	var dict = {"userID":get_node("/root/GameLogic").user_id, "gameID":gameID, "score":get_node("/root/GameLogic").finished_score}
 	
 	#print(dict)

@@ -69,7 +69,7 @@ onready var piano : AudioStreamPlayer = $Piano
 func _ready():
 	print(screen_size)
 	$BatButton/Label.text = \"Bat: $\" + \"%0.2f\" % get_node(\"/root/GameLogic\").bat_cost 
-	$CanvasLayer/BottomScreen.position.y = screen_size.y
+	$CanvasLayer/BottomScreen.position.y = screen_size.y + 75
 	rng.randomize()
 	#rain.play()
 	piano.play()
@@ -142,7 +142,7 @@ func _process(delta):
 
 	if Input.is_action_just_pressed(\"right_click\"):
 		self.money += 10
-		var mouse_position = get_viewport().get_mouse_position()
+		#var mouse_position = get_viewport().get_mouse_position()
 		#Duplicate is the most important part 
 		#Otherwise the bats all share the same script
 		#var bat = bat_packed_scene.instance().duplicate()
@@ -284,9 +284,10 @@ func _on_FarmButton_pressed():
 			get_node(\"/root/GameLogic\").finished_score = \"%0.0f\" % get_node(\"/root/GameLogic\").finished_score
 			$WinLayer/WinScreen/Score.text = \"Score: \" + get_node(\"/root/GameLogic\").finished_score
 			$WinLayer/WinScreen.visible = true
-			$Credits.visible = true;
+			
 			if get_node(\"/root/GameLogic\").fungus_chance > 0:
 				$Explanation.visible = true
+				$Explanation2.visible = true
 			var score_update = score_update_scene.instance().duplicate()
 			add_child(score_update)
 	else: 
@@ -635,45 +636,37 @@ visible = false
 margin_left = 210.0
 margin_top = 175.0
 margin_right = 660.0
-margin_bottom = 975.0
+margin_bottom = 615.0
 theme = ExtResource( 27 )
 
 [node name="Label" type="Label" parent="Explanation"]
 margin_left = 60.0
-margin_top = 87.0
+margin_top = 40.0
 margin_right = 390.0
-margin_bottom = 712.0
+margin_bottom = 400.0
 custom_fonts/font = SubResource( 16 )
-text = "In Nova Scotia, Canada our bat population was decimated by a fungus. This fungus causes a disease known as \"White-Nose Syndrome\". (Hence the bats turning white.) 
+text = "White-Nose Syndrome, a disease caused by an invasive fungus, decimated the bat population in Nova Scotia, Canada. In the winter of 2012-2013, the bat population declined by 90%!
 
-Dehydration is caused by this infection and as a result bats wake up to drink water more than they should. This increase in activity causes them to starve to death. 
-
-During the winter of 2012-2013 our bat population declined by 90%. Cleaning your items thoroughly to get rid of spores if you travel and avoiding where bats live in general can help prevent further spread. 
-
-Check out Nova Scotia Invasive Species Council's website for more information on the bats or other fauna and flora!"
+This disease causes bats to wake during winter hibernation to clean off the white fungus growing on their face and wings. The increased activity consumes their limited energy, and infected bats will eventually starve to death."
 autowrap = true
 
-[node name="Credits" type="Panel" parent="."]
+[node name="Explanation2" type="Panel" parent="."]
 visible = false
 margin_left = 1290.0
 margin_top = 175.0
 margin_right = 1740.0
-margin_bottom = 975.0
+margin_bottom = 615.0
 theme = ExtResource( 27 )
 
-[node name="Label" type="Label" parent="Credits"]
+[node name="Label" type="Label" parent="Explanation2"]
 margin_left = 60.0
-margin_top = 87.0
+margin_top = 40.0
 margin_right = 390.0
-margin_bottom = 712.0
+margin_bottom = 400.0
 custom_fonts/font = SubResource( 16 )
-text = "In Nova Scotia, Canada our bat population was decimated by a fungus. This fungus causes a disease known as \"White-Nose Syndrome\". (Hence the bats turning white.) 
+text = "To reduce the spread of this invasive fungus, avoid entering caves where bats live. Cleaning your gear thoroughly before and after a hike can also help reduce the spread of this and other invasive species.
 
-Dehydration is caused by this infection and as a result bats wake up to drink water more than they should. This increase in activity causes them to starve to death. 
-
-During the winter of 2012-2013 our bat population declined by 90%. Cleaning your items thoroughly to get rid of spores if you travel and avoiding where bats live in general can help prevent further spread. 
-
-Check out Nova Scotia Invasive Species Council's website for more information on the bats or other fauna and flora!"
+Check out the Nova Scotia Invasive Species Council's website to learn more about invasive species and how to prevent their spread!"
 autowrap = true
 
 [connection signal="child_entered_tree" from="." to="." method="_on_Main_child_entered_tree"]

@@ -188,9 +188,11 @@ func _on_AnimatedSprite_animation_finished():
 		self.queue_free()
 
 func game_over():
+	if get_node(\"/root/GameLogic\").fungus_chance > 0:
+		get_node(\"../Explanation\").visible = true
+		get_node(\"../Explanation2\").visible = true
 	get_tree().paused = true
 	get_node(\"../GameOverLayer/GameOverScreen\").visible = true
-	get_node(\"../Credits\").visible = true
 "
 
 [sub_resource type="AtlasTexture" id=26]

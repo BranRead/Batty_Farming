@@ -61,22 +61,13 @@ align = 1
 valign = 1
 
 [node name="StartButton" type="Button" parent="StartGame/ColorRect"]
-margin_left = 200.0
-margin_top = 230.0
-margin_right = 300.0
-margin_bottom = 280.0
+margin_left = 125.0
+margin_top = 150.0
+margin_right = 225.0
+margin_bottom = 200.0
 rect_pivot_offset = Vector2( -835, -288 )
 custom_fonts/font = SubResource( 3 )
 text = "Start"
-
-[node name="QuitButton" type="Button" parent="StartGame/ColorRect"]
-margin_left = 50.0
-margin_top = 230.0
-margin_right = 150.0
-margin_bottom = 280.0
-rect_pivot_offset = Vector2( -835, -288 )
-custom_fonts/font = SubResource( 4 )
-text = "Quit"
 
 [node name="Bat" parent="." instance=ExtResource( 4 )]
 position = Vector2( 334, 220 )
@@ -101,6 +92,7 @@ position = Vector2( 1610, 330 )
 
 [node name="Options" type="CanvasLayer" parent="."]
 layer = 10
+visible = false
 
 [node name="ColorRect" type="Panel" parent="Options"]
 margin_left = 785.0
@@ -199,7 +191,6 @@ script = ExtResource( 6 )
 [node name="HTTPRequest" type="HTTPRequest" parent="GetUserID"]
 
 [connection signal="pressed" from="StartGame/ColorRect/StartButton" to="." method="_on_StartButton_pressed"]
-[connection signal="pressed" from="StartGame/ColorRect/QuitButton" to="." method="_on_QuitButton_pressed"]
 [connection signal="pressed" from="Options/ColorRect/PlayButton" to="." method="_on_PlayButton_pressed"]
 [connection signal="pressed" from="Options/ColorRect/BackButton" to="." method="_on_BackButton_pressed"]
 [connection signal="pressed" from="Options/ColorRect/CheckBox" to="." method="_on_CheckBox_pressed"]

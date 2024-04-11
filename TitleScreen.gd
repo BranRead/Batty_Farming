@@ -12,7 +12,6 @@ var is_game = false
 func _ready():
 	$Options/ColorRect/CheckBox.pressed = true
 	$Options/ColorRect/CheckBox3.pressed = true
-	
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
