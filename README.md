@@ -9,7 +9,7 @@
 ### This game is truly a love letter to Insaniquarium.
 ## Gameplay
 ### Like with the game it's based off of, the main gameplay loop is to feed the bats, keep them alive and collect what they drop. Seashells in Insaniquarium and guano in this one.
-### A wincon hasn't been 100% decided yet, it might be similar to its' inspiration or it might be something unique.
+### The wincon is similar to Insaniquarium in which something has to be bought 3 times to finish the game.
 ### The bats have three stages of growth with the largest bats dropping gold guano which is worth more. 
 ### If the player doesn't feed the bats then they will die, causing the player to manage their money between buying upgrades, buying bats and paying for dropping food. 
 ### The upgrades are as follows:
@@ -18,10 +18,12 @@
 3. Weapon upgrade
 ### #1 upgrades how many items of food can be on the screen at once. (Up to a max of 10). 
 ### #2 upgrades the quality of food. The greater the quality the faster it will cause bats to grow
-### #3 is a feature coming and it will upgrade the weapon that can used to fight enemies when they spawn. In my game this will likely be owls and potentially cats. The weapons in this case will be water guns as the lasers used against the aliens in Insaniquarium wouldn't fit the cozier vibe I want for the bat game. 
-### Technical 
-## Made using GDScript.
-## More info will come when I get to the stage at which the game is playable. 
+### #3 upgrades the weapon power and changes the sprite used to indicate the use of it when an enemy spawns in. 
+## Technical 
+### Made using Godot and GDScript.
+### The game uses a GET and POST request in order to get the user id in relation to Quantum Arcade and then to send the final score to the website.
+### There are essentially 3 difficulties. Normal, and then two with the white-nose fungus. This fungus is based on a fungus which ravaged Nova Scotia's bat population and the two difficulties reflect real life prevention of this.
+### The user can choose whether to clean their clothes before starting or not. Cleaning clothes makes for a "hard" (or "batty") difficulty and not cleaning clothes creates and even harder mode with increased chance of the fungus appearing.  
 ## To-do:
 - [x] Make food sprite change when food quality upgrade is purchased
 - [x] Have the above cause bats to grow faster
