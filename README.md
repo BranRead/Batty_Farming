@@ -23,15 +23,15 @@
 ## Made using GDScript.
 ## More info will come when I get to the stage at which the game is playable. 
 ## To-do:
-- [ ] Make food sprite change when food quality upgrade is purchased
-- [ ] Have the above cause bats to grow faster
+- [x] Make food sprite change when food quality upgrade is purchased
+- [x] Have the above cause bats to grow faster
 - [ ] \(Optional) Make better food keep bats full longer
-- [ ] Figure out enemy spawning and movement
-- [ ] Enemy collision with bat = death
-- [ ] Find water gun sprites
-- [ ] Figure out damage and HP for enemies
+- [x] Figure out enemy spawning and movement
+- [x] Enemy collision with bat = death
+- [x] Find water gun sprites
+- [x] Figure out damage and HP for enemies
 - [ ] \(Optional) Display enemy hp
-- [ ] Figure out wincon
-- [ ] Figure out how to implement White-Nose Syndrome (Something which nearly wiped out NS's bat population I want there to be something which includes this in gameplay and a small PSA for users)
-- [ ] Finish off sound effects. The ones implemented now are placeholders
-- [ ] Finish tweaking before release
+- [x] Figure out wincon
+- [x] Figure out how to implement White-Nose Syndrome (Something which nearly wiped out NS's bat population I want there to be something which includes this in gameplay and a small PSA for users)
+- [x] Finish off sound effects. The ones implemented now are placeholders
+- [x] Finish tweaking before release
